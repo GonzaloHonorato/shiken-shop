@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Juegos de RPG - ShikenShop</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="./rpg.css">
+</head>
+<body class="bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 min-h-screen">
+    <!-- Header -->
+    <header class="bg-opacity-90 bg-gray-900 backdrop-blur-sm fixed w-full top-0 z-50 shadow-lg border-b-2 border-purple-500">
+        <nav class="container mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+                <a href="../../index.html" class="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-indigo-600 logo-glow">
+                    ShikenShop
+                </a>
+                <div class="flex space-x-4">
+                    <a href="../../index.html" class="text-white hover:text-purple-400 transition-colors duration-300">Inicio</a>
+                    <a href="../accion/accion.html" class="text-white hover:text-purple-400 transition-colors duration-300">Acción</a>
+                    <a href="../estrategia/estrategia.html" class="text-white hover:text-purple-400 transition-colors duration-300">Estrategia</a>
+                    <a href="../aventura/aventura.html" class="text-white hover:text-purple-400 transition-colors duration-300">Aventura</a>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Banner -->
+    <section class="pt-32 pb-12 px-4">
+        <div class="container mx-auto text-center">
+            <div class="inline-block mb-6">
+                <svg class="w-24 h-24 text-purple-500 float-animation" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                </svg>
+            </div>
+            <h1 class="text-5xl md:text-6xl font-bold text-white mb-4 category-title">
+                Juegos de <span class="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-indigo-600">RPG</span>
+            </h1>
+            <p class="text-xl text-gray-300 max-w-2xl mx-auto">
+                Embárcate en aventuras épicas y descubre mundos fantásticos
+            </p>
+        </div>
+    </section>
+
+    <!-- Grid de juegos -->
+    <section class="pb-20 px-4">
+        <div class="container mx-auto">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                
+                <!-- Juego 1: Dragon's Legacy -->
+                <div class="game-card bg-gray-800 bg-opacity-50 backdrop-blur-sm rounded-2xl overflow-hidden shadow-2xl border border-purple-500/30">
+                    <div class="relative h-64 bg-gradient-to-br from-purple-600 to-indigo-700 overflow-hidden">
+                        <div class="absolute inset-0 flex items-center justify-center">
+                            <div class="text-center">
+                                <svg class="w-32 h-32 text-white opacity-80 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path>
+                                </svg>
+                                <p class="text-white font-semibold">Dragon's Legacy</p>
+                            </div>
+                        </div>
+                        <div class="absolute top-4 right-4">
+                            <span class="bg-purple-600 text-white px-3 py-1 rounded-full text-sm font-bold pulse">
+                                -30% OFF
+                            </span>
+                        </div>
+                    </div>
+                    <div class="p-6">
+                        <h3 class="text-2xl font-bold text-white mb-2">Dragon's Legacy</h3>
+                        <p class="text-gray-300 mb-4 line-clamp-3">
+                            Un RPG épico donde heredas el poder de los dragones. Explora reinos vastos, completa misiones legendarias y forja tu destino.
+                        </p>
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-400 line-through text-sm">$69.990</p>
+                                <p class="text-3xl font-bold text-purple-400">$48.990</p>
+                            </div>
+                            <button class="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-6 py-3 rounded-lg font-semibold hover:from-purple-700 hover:to-indigo-700 transition-all duration-300 hover:shadow-lg">
+                                Comprar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Juego 2: Mystic Chronicles -->
+                <div class="game-card bg-gray-800 bg-opacity-50 backdrop-blur-sm rounded-2xl overflow-hidden shadow-2xl border border-purple-500/30">
+                    <div class="relative h-64 bg-gradient-to-br from-indigo-600 to-purple-700 overflow-hidden">
+                        <div class="absolute inset-0 flex items-center justify-center">
+                            <div class="text-center">
+                                <svg class="w-32 h-32 text-white opacity-80 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                                </svg>
+                                <p class="text-white font-semibold">Mystic Chronicles</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-6">
+                        <h3 class="text-2xl font-bold text-white mb-2">Mystic Chronicles</h3>
+                        <p class="text-gray-300 mb-4 line-clamp-3">
+                            Desentraña los misterios de un mundo mágico. Sistema de magia profundo y decisiones que cambian la historia para siempre.
+                        </p>
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-3xl font-bold text-purple-400">$54.990</p>
+                            </div>
+                            <button class="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-6 py-3 rounded-lg font-semibold hover:from-purple-700 hover:to-indigo-700 transition-all duration-300 hover:shadow-lg">
+                                Comprar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Juego 3: Kingdom Reborn -->
+                <div class="game-card bg-gray-800 bg-opacity-50 backdrop-blur-sm rounded-2xl overflow-hidden shadow-2xl border border-purple-500/30">
+                    <div class="relative h-64 bg-gradient-to-br from-violet-600 to-purple-700 overflow-hidden">
+                        <div class="absolute inset-0 flex items-center justify-center">
+                            <div class="text-center">
+                                <svg class="w-32 h-32 text-white opacity-80 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"></path>
+                                </svg>
+                                <p class="text-white font-semibold">Kingdom Reborn</p>
+                            </div>
+                        </div>
+                        <div class="absolute top-4 right-4">
+                            <span class="bg-purple-600 text-white px-3 py-1 rounded-full text-sm font-bold pulse">
+                                -20% OFF
+                            </span>
+                        </div>
+                    </div>
+                    <div class="p-6">
+                        <h3 class="text-2xl font-bold text-white mb-2">Kingdom Reborn</h3>
+                        <p class="text-gray-300 mb-4 line-clamp-3">
+                            Reconstruye tu reino desde las cenizas. Gestiona recursos, forma alianzas y lidera a tu pueblo hacia la gloria en este RPG estratégico.
+                        </p>
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-400 line-through text-sm">$59.990</p>
+                                <p class="text-3xl font-bold text-purple-400">$47.990</p>
+                            </div>
+                            <button class="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-6 py-3 rounded-lg font-semibold hover:from-purple-700 hover:to-indigo-700 transition-all duration-300 hover:shadow-lg">
+                                Comprar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- Navegación -->
+    <section class="py-12 px-4 bg-gray-900 bg-opacity-50">
+        <div class="container mx-auto">
+            <h3 class="text-3xl font-bold text-white text-center mb-8">Explora más categorías</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <a href="../accion/accion.html" class="bg-gradient-to-br from-red-600 to-orange-500 p-6 rounded-xl text-center hover:scale-105 transform transition-all duration-300">
+                    <svg class="w-16 h-16 text-white mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                    </svg>
+                    <h4 class="text-2xl font-bold text-white">Acción</h4>
+                </a>
+                <a href="../estrategia/estrategia.html" class="bg-gradient-to-br from-blue-600 to-cyan-500 p-6 rounded-xl text-center hover:scale-105 transform transition-all duration-300">
+                    <svg class="w-16 h-16 text-white mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                    </svg>
+                    <h4 class="text-2xl font-bold text-white">Estrategia</h4>
+                </a>
+                <a href="../aventura/aventura.html" class="bg-gradient-to-br from-green-600 to-teal-500 p-6 rounded-xl text-center hover:scale-105 transform transition-all duration-300">
+                    <svg class="w-16 h-16 text-white mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <h4 class="text-2xl font-bold text-white">Aventura</h4>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 py-8 px-4 border-t-2 border-purple-500">
+        <div class="container mx-auto text-center">
+            <a href="../../index.html" class="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-indigo-600 inline-block mb-4">
+                ShikenShop
+            </a>
+            <p class="text-gray-400">© 2024 ShikenShop. Todos los derechos reservados.</p>
+        </div>
+    </footer>
+
+    <script src="./rpg.js"></script>
+</body>
+</html>

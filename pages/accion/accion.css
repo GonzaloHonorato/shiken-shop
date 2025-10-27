@@ -1,0 +1,139 @@
+/* Variables CSS específicas para Acción */
+:root {
+    --action-primary: #dc2626;
+    --action-secondary: #ea580c;
+    --action-accent: #f97316;
+}
+
+/* Animación del logo */
+@keyframes logoGlow {
+    0%, 100% {
+        text-shadow: 0 0 10px rgba(220, 38, 38, 0.5);
+    }
+    50% {
+        text-shadow: 0 0 20px rgba(220, 38, 38, 0.8), 0 0 30px rgba(234, 88, 12, 0.6);
+    }
+}
+
+.logo-glow {
+    animation: logoGlow 2s ease-in-out infinite;
+}
+
+/* Animación de bounce para el icono */
+@keyframes bounce {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-20px);
+    }
+}
+
+.bounce-animation {
+    animation: bounce 2s ease-in-out infinite;
+}
+
+/* Animación del título de categoría */
+@keyframes titleSlide {
+    from {
+        opacity: 0;
+        transform: translateX(-50px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.category-title {
+    animation: titleSlide 0.8s ease-out;
+}
+
+/* Animación de pulso para badges de descuento */
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7);
+    }
+    50% {
+        transform: scale(1.05);
+        box-shadow: 0 0 0 10px rgba(220, 38, 38, 0);
+    }
+}
+
+.pulse {
+    animation: pulse 2s infinite;
+}
+
+/* Estilos para las tarjetas de juegos */
+.game-card {
+    transition: all 0.3s ease;
+}
+
+.game-card:hover {
+    transform: translateY(-10px) scale(1.02);
+    box-shadow: 0 25px 50px -12px rgba(220, 38, 38, 0.4);
+}
+
+/* Animación de las tarjetas de navegación */
+.nav-card {
+    transition: all 0.3s ease;
+}
+
+.nav-card:hover {
+    box-shadow: 0 20px 40px -12px rgba(220, 38, 38, 0.5);
+}
+
+/* Efecto shimmer en imágenes */
+@keyframes shimmer {
+    0% {
+        background-position: -1000px 0;
+    }
+    100% {
+        background-position: 1000px 0;
+    }
+}
+
+.game-card:hover .relative::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.2),
+        transparent
+    );
+    animation: shimmer 1.5s;
+}
+
+/* Media Queries */
+@media (max-width: 768px) {
+    .category-title {
+        font-size: 2.5rem;
+    }
+    
+    .game-card:hover {
+        transform: translateY(-5px) scale(1.01);
+    }
+}
+
+@media (max-width: 480px) {
+    .category-title {
+        font-size: 2rem;
+    }
+}
+
+/* Reducir animaciones para usuarios que prefieren menos movimiento */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
