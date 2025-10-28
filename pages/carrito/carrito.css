@@ -1,0 +1,223 @@
+/* Variables CSS */
+:root {
+    --primary-purple: #9333ea;
+    --primary-pink: #ec4899;
+    --bg-dark: #111827;
+    --bg-gray: #1f2937;
+    --border-color: rgba(147, 51, 234, 0.3);
+    --text-white: #ffffff;
+    --text-gray: #9ca3af;
+    --success-color: #10b981;
+    --transition-speed: 0.3s;
+}
+
+/* Animación del logo */
+@keyframes logoGlow {
+    0%, 100% {
+        text-shadow: 0 0 10px rgba(147, 51, 234, 0.5),
+                     0 0 20px rgba(147, 51, 234, 0.3);
+    }
+    50% {
+        text-shadow: 0 0 20px rgba(236, 72, 153, 0.5),
+                     0 0 30px rgba(236, 72, 153, 0.3);
+    }
+}
+
+.logo-animation {
+    animation: logoGlow 3s ease-in-out infinite;
+}
+
+/* Animación de entrada de productos */
+@keyframes slideInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.cart-item {
+    animation: slideInLeft 0.5s ease-out;
+}
+
+/* Animación de salida de productos */
+@keyframes slideOutRight {
+    to {
+        opacity: 0;
+        transform: translateX(100px);
+    }
+}
+
+.removing {
+    animation: slideOutRight 0.3s ease-out forwards;
+}
+
+/* Animación del modal */
+@keyframes modalFadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: scale(0.8) translateY(-50px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+#checkout-modal {
+    animation: modalFadeIn 0.3s ease-out;
+}
+
+.modal-content {
+    animation: modalSlideIn 0.4s ease-out;
+}
+
+/* Animación de pulso para botones */
+@keyframes pulse {
+    0%, 100% {
+        box-shadow: 0 0 0 0 rgba(147, 51, 234, 0.7);
+    }
+    50% {
+        box-shadow: 0 0 0 15px rgba(147, 51, 234, 0);
+    }
+}
+
+#checkout-btn:hover {
+    animation: pulse 1.5s infinite;
+}
+
+/* Animación de contador */
+@keyframes bounce {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.2);
+    }
+}
+
+.quantity-change {
+    animation: bounce 0.3s ease-out;
+}
+
+/* Estilos para productos del carrito */
+.cart-item {
+    transition: all var(--transition-speed) ease;
+}
+
+.cart-item:hover {
+    transform: translateX(5px);
+    box-shadow: 0 10px 30px rgba(147, 51, 234, 0.3);
+}
+
+/* Botones de cantidad */
+.quantity-btn {
+    transition: all 0.2s ease;
+}
+
+.quantity-btn:hover {
+    transform: scale(1.1);
+    background-color: rgba(147, 51, 234, 0.5);
+}
+
+.quantity-btn:active {
+    transform: scale(0.95);
+}
+
+/* Animación de carga */
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.loading-spinner {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top-color: white;
+    animation: spin 0.8s linear infinite;
+}
+
+/* Media Queries para Responsividad */
+
+/* Pantallas pequeñas (móviles) */
+@media (max-width: 640px) {
+    .cart-item {
+        flex-direction: column;
+    }
+    
+    .cart-item img {
+        width: 100%;
+        height: auto;
+    }
+    
+    #cart-content {
+        grid-template-columns: 1fr;
+    }
+    
+    .sticky {
+        position: relative;
+        top: 0;
+    }
+}
+
+/* Pantallas medianas (tablets) */
+@media (min-width: 641px) and (max-width: 1024px) {
+    .container {
+        max-width: 90%;
+    }
+    
+    .cart-item img {
+        max-width: 150px;
+    }
+}
+
+/* Pantallas grandes (desktop) */
+@media (min-width: 1025px) {
+    .cart-item:hover .delete-btn {
+        opacity: 1;
+    }
+    
+    .delete-btn {
+        opacity: 0.7;
+        transition: opacity var(--transition-speed) ease;
+    }
+}
+
+/* Efectos de glassmorphism */
+.backdrop-blur-sm {
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+/* Animación para el contador del carrito */
+#cart-count {
+    transition: all 0.3s ease;
+}
+
+#cart-count.updated {
+    animation: bounce 0.5s ease-out;
+}
+
+/* Estilo para el badge de descuento */
+.discount-badge {
+    animation: pulse 2s infinite;
+}
+
+/* Transición suave para números */
+.price-update {
+    animation: bounce 0.3s ease-out;
+}

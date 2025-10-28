@@ -1,5 +1,8 @@
 // Menú móvil toggle
 document.addEventListener('DOMContentLoaded', function() {
+    // Actualizar contador del carrito
+    updateCartCount();
+    
     const menuToggle = document.getElementById('menuToggle');
     const nav = document.querySelector('nav');
     
@@ -127,3 +130,23 @@ document.addEventListener('DOMContentLoaded', function() {
 
     console.log('ShikenShop inicializado correctamente! 🎮');
 });
+
+// Función para actualizar el contador del carrito
+function updateCartCount() {
+    const cart = JSON.parse(localStorage.getItem('cart')) || [];
+    const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+    const cartCount = document.getElementById('cart-count');
+    
+    if (cartCount) {
+        cartCount.textContent = totalItems;
+        
+        // Animación cuando cambia
+        if (totalItems > 0) {
+            cartCount.style.animation = 'pulse 0.5s ease';
+            setTimeout(() => {
+                cartCount.style.animation = '';
+            }, 500);
+        }
+    }
+}
+

@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carrito de Compras - ShikenShop</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="./carrito.css">
+</head>
+<body class="bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 min-h-screen">
+    <!-- Header -->
+    <header class="bg-opacity-90 bg-gray-900 backdrop-blur-sm fixed w-full top-0 z-50 shadow-lg border-b-2 border-purple-500">
+        <nav class="container mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+                <a href="../../index.html">
+                    <h1 class="text-3xl md:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600 logo-animation">
+                        ShikenShop
+                    </h1>
+                </a>
+                <div class="hidden md:flex space-x-6 items-center">
+                    <a href="../../index.html" class="text-white hover:text-purple-400 transition-colors duration-300">Inicio</a>
+                    <a href="../../index.html#categorias" class="text-white hover:text-purple-400 transition-colors duration-300">Categorías</a>
+                    <a href="../registro/registro.html" class="text-white hover:text-purple-400 transition-colors duration-300">Registro</a>
+                    <a href="../carrito/carrito.html" class="text-purple-400 relative">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                        </svg>
+                        <span id="cart-count" class="absolute -top-2 -right-2 bg-pink-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">0</span>
+                    </a>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Cart Section -->
+    <section class="pt-32 pb-20 px-4">
+        <div class="container mx-auto max-w-6xl">
+            <h2 class="text-4xl md:text-5xl font-bold text-white text-center mb-12">
+                Tu <span class="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600">Carrito</span>
+            </h2>
+
+            <!-- Carrito Vacío -->
+            <div id="empty-cart" class="hidden text-center py-20">
+                <svg class="w-32 h-32 mx-auto text-gray-600 mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                </svg>
+                <h3 class="text-2xl font-bold text-white mb-4">Tu carrito está vacío</h3>
+                <p class="text-gray-400 mb-8">¡Explora nuestras categorías y encuentra tus juegos favoritos!</p>
+                <a href="../../index.html#categorias" class="inline-block bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-4 rounded-full font-semibold text-lg hover:scale-105 transform transition-all duration-300">
+                    Ver Juegos
+                </a>
+            </div>
+
+            <!-- Carrito con Productos -->
+            <div id="cart-content" class="hidden">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <!-- Lista de Productos -->
+                    <div class="lg:col-span-2">
+                        <div id="cart-items" class="space-y-4">
+                            <!-- Los productos se cargarán aquí dinámicamente -->
+                        </div>
+                    </div>
+
+                    <!-- Resumen del Pedido -->
+                    <div class="lg:col-span-1">
+                        <div class="bg-gray-800 bg-opacity-50 backdrop-blur-sm rounded-2xl p-6 border border-purple-500/30 sticky top-24">
+                            <h3 class="text-2xl font-bold text-white mb-6">Resumen del Pedido</h3>
+                            
+                            <div class="space-y-4 mb-6">
+                                <div class="flex justify-between text-gray-300">
+                                    <span>Subtotal:</span>
+                                    <span id="subtotal">$0</span>
+                                </div>
+                                <div class="flex justify-between text-gray-300">
+                                    <span>Descuentos:</span>
+                                    <span id="discount" class="text-green-400">-$0</span>
+                                </div>
+                                <div class="border-t border-gray-700 pt-4">
+                                    <div class="flex justify-between text-xl font-bold text-white">
+                                        <span>Total:</span>
+                                        <span id="total">$0</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button id="checkout-btn" class="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-4 rounded-lg font-semibold text-lg hover:scale-105 transform transition-all duration-300 mb-4">
+                                Proceder al Pago
+                            </button>
+
+                            <button id="clear-cart-btn" class="w-full bg-gray-700 hover:bg-gray-600 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-300">
+                                Vaciar Carrito
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Modal de Checkout -->
+    <div id="checkout-modal" class="fixed inset-0 bg-black bg-opacity-75 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-gray-800 rounded-2xl max-w-md w-full p-8 border border-purple-500/30 modal-content">
+            <div class="text-center">
+                <div class="w-20 h-20 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                </div>
+                <h3 class="text-2xl font-bold text-white mb-4">¡Compra Exitosa!</h3>
+                <p class="text-gray-300 mb-6">Tu pedido ha sido procesado correctamente. Recibirás un correo con los detalles de tu compra.</p>
+                <button id="close-modal-btn" class="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-3 rounded-lg font-semibold hover:scale-105 transform transition-all duration-300">
+                    Continuar Comprando
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 py-12 px-4 border-t-2 border-purple-500">
+        <div class="container mx-auto text-center">
+            <h3 class="text-3xl font-bold text-white mb-4">ShikenShop</h3>
+            <p class="text-gray-400 mb-6">Tu tienda de videojuegos de confianza</p>
+            <p class="text-gray-500 text-sm">© 2024 ShikenShop. Todos los derechos reservados.</p>
+        </div>
+    </footer>
+
+    <script src="./carrito.js"></script>
+</body>
+</html>

@@ -1,0 +1,202 @@
+/* Variables CSS */
+:root {
+    --primary-purple: #9333ea;
+    --primary-pink: #ec4899;
+    --bg-dark: #111827;
+    --bg-gray: #1f2937;
+    --border-color: rgba(147, 51, 234, 0.3);
+    --text-white: #ffffff;
+    --text-gray: #9ca3af;
+    --error-color: #ec4899;
+    --success-color: #10b981;
+    --transition-speed: 0.3s;
+}
+
+/* Animación del logo */
+@keyframes logoGlow {
+    0%, 100% {
+        text-shadow: 0 0 10px rgba(147, 51, 234, 0.5),
+                     0 0 20px rgba(147, 51, 234, 0.3),
+                     0 0 30px rgba(147, 51, 234, 0.2);
+    }
+    50% {
+        text-shadow: 0 0 20px rgba(236, 72, 153, 0.5),
+                     0 0 30px rgba(236, 72, 153, 0.3),
+                     0 0 40px rgba(236, 72, 153, 0.2);
+    }
+}
+
+.logo-animation {
+    animation: logoGlow 3s ease-in-out infinite;
+}
+
+/* Animación de entrada del formulario */
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.form-group {
+    animation: slideInUp 0.5s ease-out;
+    animation-fill-mode: both;
+}
+
+.form-group:nth-child(1) { animation-delay: 0.1s; }
+.form-group:nth-child(2) { animation-delay: 0.2s; }
+.form-group:nth-child(3) { animation-delay: 0.3s; }
+.form-group:nth-child(4) { animation-delay: 0.4s; }
+.form-group:nth-child(5) { animation-delay: 0.5s; }
+.form-group:nth-child(6) { animation-delay: 0.6s; }
+.form-group:nth-child(7) { animation-delay: 0.7s; }
+
+/* Animación de error shake */
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    10%, 30%, 50%, 70%, 90% { transform: translateX(-10px); }
+    20%, 40%, 60%, 80% { transform: translateX(10px); }
+}
+
+.error-shake {
+    animation: shake 0.5s ease-in-out;
+}
+
+/* Animación de pulso para el botón submit */
+@keyframes pulse {
+    0%, 100% {
+        box-shadow: 0 0 0 0 rgba(147, 51, 234, 0.7);
+    }
+    50% {
+        box-shadow: 0 0 0 10px rgba(147, 51, 234, 0);
+    }
+}
+
+#submit-btn:hover {
+    animation: pulse 1.5s infinite;
+}
+
+/* Animación de fade para mensajes */
+@keyframes fadeInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fade-in-down {
+    animation: fadeInDown 0.5s ease-out;
+}
+
+/* Estilos para inputs con error */
+.input-error {
+    border-color: var(--error-color) !important;
+    animation: shake 0.5s ease-in-out;
+}
+
+.input-success {
+    border-color: var(--success-color) !important;
+}
+
+/* Mensaje de error visible */
+.error-message.visible {
+    display: block;
+    animation: fadeInDown 0.3s ease-out;
+}
+
+/* Transiciones suaves para los inputs */
+input:focus,
+textarea:focus {
+    transform: scale(1.02);
+    transition: all var(--transition-speed) ease;
+}
+
+/* Efecto hover en los botones de toggle password */
+.toggle-password:hover {
+    transform: scale(1.1);
+}
+
+/* Media Queries para Responsividad */
+
+/* Pantallas pequeñas (móviles) */
+@media (max-width: 640px) {
+    .form-group label {
+        font-size: 0.875rem;
+    }
+    
+    input,
+    textarea {
+        font-size: 16px; /* Previene zoom en iOS */
+    }
+    
+    #submit-btn,
+    #clear-btn {
+        padding: 0.875rem 1.5rem;
+        font-size: 1rem;
+    }
+}
+
+/* Pantallas medianas (tablets) */
+@media (min-width: 641px) and (max-width: 1024px) {
+    .container {
+        max-width: 700px;
+    }
+    
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+}
+
+/* Pantallas grandes (desktop) */
+@media (min-width: 1025px) {
+    .form-group:hover label {
+        color: var(--primary-purple);
+        transition: color var(--transition-speed) ease;
+    }
+    
+    input:hover,
+    textarea:hover {
+        border-color: rgba(147, 51, 234, 0.5);
+        transition: border-color var(--transition-speed) ease;
+    }
+}
+
+/* Animación de carga para el botón submit */
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.loading-spinner {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top-color: white;
+    animation: spin 0.8s linear infinite;
+}
+
+/* Estilos para el contador del carrito */
+#cart-count {
+    animation: pulse 2s infinite;
+}
+
+/* Mejoras de accesibilidad */
+*:focus {
+    outline: 2px solid var(--primary-purple);
+    outline-offset: 2px;
+}
+
+/* Efecto de glassmorphism mejorado */
+.backdrop-blur-sm {
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
