@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iniciar Sesión - ShikenShop</title>
+    <link rel="stylesheet" href="login.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 min-h-screen flex items-center justify-center px-4">
+    
+    <!-- Particles Background Effect -->
+    <div class="particles-bg"></div>
+    
+    <!-- Login Container -->
+    <div class="login-container w-full max-w-md relative z-10">
+        
+        <!-- Logo Section -->
+        <div class="text-center mb-8">
+            <a href="../../index.html" class="inline-block">
+                <h1 class="logo-text text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">
+                    ShikenShop
+                </h1>
+            </a>
+            <p class="text-gray-400 mt-2">Inicia sesión para continuar</p>
+        </div>
+
+        <!-- Login Card -->
+        <div class="login-card bg-gray-800/50 backdrop-blur-lg rounded-2xl shadow-2xl p-8 border border-purple-500/20">
+            
+            <!-- Success Message (hidden by default) -->
+            <div id="success-message" class="hidden success-message mb-6 p-4 bg-green-500/20 border border-green-500/50 rounded-lg">
+                <p class="text-green-400 text-sm flex items-center">
+                    <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                    </svg>
+                    <span id="success-text"></span>
+                </p>
+            </div>
+
+            <!-- Error Message (hidden by default) -->
+            <div id="error-message" class="hidden error-message mb-6 p-4 bg-red-500/20 border border-red-500/50 rounded-lg">
+                <p class="text-red-400 text-sm flex items-center">
+                    <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                    </svg>
+                    <span id="error-text"></span>
+                </p>
+            </div>
+
+            <!-- Login Form -->
+            <form id="login-form" novalidate>
+                
+                <!-- Email/Username Field -->
+                <div class="form-group mb-6">
+                    <label for="identifier" class="block text-gray-300 font-medium mb-2">
+                        Email o Usuario
+                    </label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                            </svg>
+                        </div>
+                        <input 
+                            type="text" 
+                            id="identifier" 
+                            name="identifier"
+                            class="input-field w-full pl-10 pr-4 py-3 bg-gray-900/50 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all"
+                            placeholder="correo@ejemplo.com o usuario"
+                            required
+                            autocomplete="username"
+                        >
+                    </div>
+                    <span class="error-msg text-red-400 text-sm mt-1 hidden" id="identifier-error"></span>
+                </div>
+
+                <!-- Password Field -->
+                <div class="form-group mb-6">
+                    <label for="password" class="block text-gray-300 font-medium mb-2">
+                        Contraseña
+                    </label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                            </svg>
+                        </div>
+                        <input 
+                            type="password" 
+                            id="password" 
+                            name="password"
+                            class="input-field w-full pl-10 pr-12 py-3 bg-gray-900/50 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all"
+                            placeholder="••••••••"
+                            required
+                            autocomplete="current-password"
+                        >
+                        <button 
+                            type="button" 
+                            id="toggle-password"
+                            class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-purple-400 transition-colors"
+                        >
+                            <svg id="eye-icon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <span class="error-msg text-red-400 text-sm mt-1 hidden" id="password-error"></span>
+                </div>
+
+                <!-- Remember Me & Forgot Password -->
+                <div class="flex items-center justify-between mb-6">
+                    <label class="flex items-center cursor-pointer">
+                        <input 
+                            type="checkbox" 
+                            id="remember-me"
+                            class="w-4 h-4 text-purple-600 bg-gray-900/50 border-gray-700 rounded focus:ring-purple-500 focus:ring-2"
+                        >
+                        <span class="ml-2 text-sm text-gray-400">Recordarme</span>
+                    </label>
+                    <a href="#" class="text-sm text-purple-400 hover:text-purple-300 transition-colors">
+                        ¿Olvidaste tu contraseña?
+                    </a>
+                </div>
+
+                <!-- Submit Button -->
+                <button 
+                    type="submit" 
+                    id="submit-btn"
+                    class="submit-btn w-full py-3 px-6 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-lg hover:from-purple-700 hover:to-pink-700 focus:outline-none focus:ring-4 focus:ring-purple-500/50 transition-all transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                    <span id="btn-text">Iniciar Sesión</span>
+                    <span id="btn-loading" class="hidden">
+                        <svg class="animate-spin h-5 w-5 mx-auto" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                    </span>
+                </button>
+
+            </form>
+
+            <!-- Divider -->
+            <div class="relative my-6">
+                <div class="absolute inset-0 flex items-center">
+                    <div class="w-full border-t border-gray-700"></div>
+                </div>
+                <div class="relative flex justify-center text-sm">
+                    <span class="px-2 bg-gray-800/50 text-gray-400">o</span>
+                </div>
+            </div>
+
+            <!-- Register Link -->
+            <div class="text-center">
+                <p class="text-gray-400 text-sm">
+                    ¿No tienes una cuenta? 
+                    <a href="../registro/registro.html" class="text-purple-400 hover:text-purple-300 font-semibold transition-colors">
+                        Regístrate aquí
+                    </a>
+                </p>
+            </div>
+
+            <!-- Demo Credentials -->
+            <div class="mt-6 p-4 bg-blue-500/10 border border-blue-500/30 rounded-lg">
+                <p class="text-blue-400 text-xs font-semibold mb-2">🔑 Credenciales de prueba:</p>
+                <div class="text-xs text-gray-400 space-y-1">
+                    <p><strong class="text-blue-300">Admin:</strong> admin@shikenshop.com / Admin123</p>
+                    <p><strong class="text-pink-300">Comprador:</strong> comprador@test.com / Comprador123</p>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Back to Home -->
+        <div class="text-center mt-6">
+            <a href="../../index.html" class="text-gray-400 hover:text-purple-400 text-sm transition-colors inline-flex items-center">
+                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                </svg>
+                Volver al inicio
+            </a>
+        </div>
+
+    </div>
+
+    <script src="login.js"></script>
+</body>
+</html>

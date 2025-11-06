@@ -22,9 +22,9 @@ function initializeFormValidation() {
             showSuccessMessage();
             saveUserData();
             
-            // Simular guardado y redirección
+            // Redirigir a login después de registro exitoso
             setTimeout(() => {
-                window.location.href = '../../index.html';
+                window.location.href = '../auth/login.html?registered=true';
             }, 2000);
         }
     });
@@ -330,18 +330,41 @@ function clearForm() {
 
 // Guardar datos del usuario en localStorage
 function saveUserData() {
-    const userData = {
-        fullname: document.getElementById('fullname').value,
-        username: document.getElementById('username').value,
-        email: document.getElementById('email').value,
+    // Obtener usuarios existentes
+    const users = JSON.parse(localStorage.getItem('users')) || [];
+    
+    // Generar nuevo ID
+    const newId = users.length > 0 ? Math.max(...users.map(u => u.id)) + 1 : 1;
+    
+    // Crear nuevo usuario con rol 'buyer'
+    const newUser = {
+        id: newId,
+        fullName: document.getElementById('fullname').value.trim(),
+        username: document.getElementById('username').value.trim(),
+        email: document.getElementById('email').value.trim(),
+        password: document.getElementById('password').value, // En producción hashear
         birthdate: document.getElementById('birthdate').value,
-        address: document.getElementById('address').value,
-        registrationDate: new Date().toISOString()
+        address: document.getElementById('address').value.trim() || '',
+        phone: '',
+        avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(document.getElementById('fullname').value)}&background=ec4899&color=fff`,
+        role: 'buyer', // ROL ASIGNADO AUTOMÁTICAMENTE
+        active: true,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        preferences: {
+            newsletter: true,
+            notifications: true,
+            favoriteCategories: []
+        }
     };
     
+    // Agregar usuario a la lista
+    users.push(newUser);
+    
     // Guardar en localStorage
-    localStorage.setItem('userData', JSON.stringify(userData));
-    localStorage.setItem('isLoggedIn', 'true');
+    localStorage.setItem('users', JSON.stringify(users));
+    
+    console.log('✅ Usuario registrado:', newUser.username);
 }
 
 // ============= TOGGLE PASSWORD =============

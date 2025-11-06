@@ -1,0 +1,351 @@
+/* ===================================
+   CSS VARIABLES
+   =================================== */
+:root {
+    --primary-purple: #9333ea;
+    --primary-pink: #ec4899;
+    --bg-dark: #111827;
+    --bg-gray: #1f2937;
+    --border-color: #374151;
+    --text-white: #f9fafb;
+    --text-gray: #9ca3af;
+    --error-color: #ef4444;
+    --success-color: #10b981;
+    --transition-speed: 0.3s;
+}
+
+/* ===================================
+   RESET & BASE
+   =================================== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+    overflow-x: hidden;
+}
+
+/* ===================================
+   PARTICLES BACKGROUND
+   =================================== */
+.particles-bg {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+.particles-bg::before,
+.particles-bg::after {
+    content: '';
+    position: absolute;
+    width: 500px;
+    height: 500px;
+    border-radius: 50%;
+    filter: blur(100px);
+    opacity: 0.15;
+    animation: float 20s ease-in-out infinite;
+}
+
+.particles-bg::before {
+    background: var(--primary-purple);
+    top: -250px;
+    left: -250px;
+    animation-delay: 0s;
+}
+
+.particles-bg::after {
+    background: var(--primary-pink);
+    bottom: -250px;
+    right: -250px;
+    animation-delay: 10s;
+}
+
+/* ===================================
+   LOGO ANIMATION
+   =================================== */
+.logo-text {
+    animation: logoGlow 3s ease-in-out infinite, logoFloat 2s ease-in-out infinite;
+    cursor: pointer;
+    transition: transform var(--transition-speed);
+}
+
+.logo-text:hover {
+    transform: scale(1.05);
+}
+
+@keyframes logoGlow {
+    0%, 100% {
+        filter: drop-shadow(0 0 10px rgba(147, 51, 234, 0.5));
+    }
+    50% {
+        filter: drop-shadow(0 0 20px rgba(236, 72, 153, 0.7));
+    }
+}
+
+@keyframes logoFloat {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-5px);
+    }
+}
+
+/* ===================================
+   LOGIN CARD ANIMATION
+   =================================== */
+.login-card {
+    animation: slideInUp 0.6s ease-out, cardGlow 3s ease-in-out infinite;
+}
+
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes cardGlow {
+    0%, 100% {
+        box-shadow: 0 0 30px rgba(147, 51, 234, 0.1);
+    }
+    50% {
+        box-shadow: 0 0 50px rgba(236, 72, 153, 0.2);
+    }
+}
+
+/* ===================================
+   FLOATING ANIMATION
+   =================================== */
+@keyframes float {
+    0%, 100% {
+        transform: translate(0, 0) scale(1);
+    }
+    33% {
+        transform: translate(30px, -50px) scale(1.1);
+    }
+    66% {
+        transform: translate(-20px, 20px) scale(0.9);
+    }
+}
+
+/* ===================================
+   FORM INPUTS
+   =================================== */
+.input-field {
+    transition: all var(--transition-speed);
+}
+
+.input-field:focus {
+    animation: inputPulse 0.3s ease-out;
+}
+
+@keyframes inputPulse {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.02);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+.input-field.error {
+    border-color: var(--error-color);
+    animation: shake 0.4s ease-in-out;
+}
+
+.input-field.success {
+    border-color: var(--success-color);
+}
+
+/* ===================================
+   ERROR/SUCCESS MESSAGES
+   =================================== */
+.error-msg {
+    display: block;
+    animation: fadeInDown 0.3s ease-out;
+}
+
+.error-message,
+.success-message {
+    animation: slideInDown 0.4s ease-out;
+}
+
+@keyframes fadeInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes shake {
+    0%, 100% {
+        transform: translateX(0);
+    }
+    10%, 30%, 50%, 70%, 90% {
+        transform: translateX(-5px);
+    }
+    20%, 40%, 60%, 80% {
+        transform: translateX(5px);
+    }
+}
+
+/* ===================================
+   SUBMIT BUTTON
+   =================================== */
+.submit-btn {
+    position: relative;
+    overflow: hidden;
+}
+
+.submit-btn::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+}
+
+.submit-btn:active::before {
+    width: 300px;
+    height: 300px;
+}
+
+.submit-btn:disabled {
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.7;
+    }
+}
+
+/* ===================================
+   LOADING SPINNER
+   =================================== */
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* ===================================
+   RESPONSIVE
+   =================================== */
+
+/* Small Devices (≤640px) */
+@media (max-width: 640px) {
+    .login-card {
+        padding: 1.5rem;
+    }
+    
+    .logo-text {
+        font-size: 2.5rem;
+    }
+    
+    .particles-bg::before,
+    .particles-bg::after {
+        width: 300px;
+        height: 300px;
+    }
+}
+
+/* Medium Devices (641px - 1024px) */
+@media (min-width: 641px) and (max-width: 1024px) {
+    .login-container {
+        max-width: 500px;
+    }
+}
+
+/* Large Devices (≥1025px) */
+@media (min-width: 1025px) {
+    .login-container {
+        max-width: 480px;
+    }
+    
+    .login-card:hover {
+        transform: translateY(-5px);
+        transition: transform var(--transition-speed);
+    }
+}
+
+/* ===================================
+   ACCESSIBILITY
+   =================================== */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* Focus visible for keyboard navigation */
+input:focus-visible,
+button:focus-visible,
+a:focus-visible {
+    outline: 2px solid var(--primary-purple);
+    outline-offset: 2px;
+}
+
+/* ===================================
+   PRINT STYLES
+   =================================== */
+@media print {
+    .particles-bg {
+        display: none;
+    }
+    
+    body {
+        background: white;
+    }
+    
+    .login-card {
+        box-shadow: none;
+        border: 1px solid #000;
+    }
+}

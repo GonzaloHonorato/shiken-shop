@@ -1,27 +1,146 @@
-// Menú móvil toggle
+// ===================================
+// INDEX.JS - ShikenShop
+// Script principal para la página de inicio
+// ===================================
+
+// ============= INICIALIZACIÓN =============
+
 document.addEventListener('DOMContentLoaded', function() {
-    // Actualizar contador del carrito
     updateCartCount();
+    updateUIBasedOnAuth();
+    setupDashboardLinks();
+    setupMobileMenu();
+    setupSmoothScroll();
+    setupScrollAnimations();
+    setupAdditionalEffects();
+    console.log('🎮 ShikenShop inicializado correctamente!');
+});
+
+// ============= AUTENTICACIÓN =============
+
+function updateUIBasedOnAuth() {
+    const session = localStorage.getItem('session');
+    const guestMenu = document.getElementById('guest-menu');
+    const userMenu = document.getElementById('user-menu');
+    const userName = document.getElementById('user-name');
+    const logoutBtn = document.getElementById('logout-btn');
     
+    if (session) {
+        try {
+            const sessionData = JSON.parse(session);
+            if (guestMenu) guestMenu.classList.add('hidden');
+            if (userMenu) userMenu.classList.remove('hidden');
+            if (userName) userName.textContent = sessionData.fullName || sessionData.username;
+            updateCartCount();
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', handleLogout);
+            }
+        } catch (error) {
+            console.error('Error al parsear sesión:', error);
+            showGuestMenu();
+        }
+    } else {
+        showGuestMenu();
+    }
+}
+
+function showGuestMenu() {
+    const guestMenu = document.getElementById('guest-menu');
+    const userMenu = document.getElementById('user-menu');
+    if (guestMenu) guestMenu.classList.remove('hidden');
+    if (userMenu) userMenu.classList.add('hidden');
+}
+
+function handleLogout(e) {
+    e.preventDefault();
+    const confirmLogout = confirm('¿Estás seguro de que quieres cerrar sesión?');
+    if (confirmLogout) {
+        localStorage.removeItem('session');
+        showNotification('Sesión cerrada correctamente', 'success');
+        setTimeout(() => {
+            window.location.reload();
+        }, 1000);
+    }
+}
+
+function setupDashboardLinks() {
+    const session = localStorage.getItem('session');
+    if (!session) return;
+    
+    try {
+        const sessionData = JSON.parse(session);
+        const dashboardLink = document.getElementById('dashboard-link');
+        const accountLink = document.getElementById('account-link');
+        
+        if (dashboardLink) {
+            if (sessionData.role === 'admin') {
+                dashboardLink.href = './pages/admin/dashboard/dashboard.html';
+            } else {
+                dashboardLink.href = './pages/buyer/dashboard/dashboard.html';
+            }
+        }
+        
+        if (accountLink) {
+            if (sessionData.role === 'admin') {
+                accountLink.href = './pages/admin/perfil/perfil.html';
+            } else {
+                accountLink.href = './pages/buyer/mi-cuenta/mi-cuenta.html';
+            }
+        }
+    } catch (error) {
+        console.error('Error al configurar enlaces:', error);
+    }
+}
+
+function showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.className = `fixed top-20 right-4 z-50 p-4 rounded-lg shadow-lg ${
+        type === 'success' ? 'bg-green-500' : 
+        type === 'error' ? 'bg-red-500' : 
+        'bg-blue-500'
+    } text-white max-w-sm`;
+    
+    notification.style.animation = 'slideInRight 0.3s ease-out';
+    notification.innerHTML = `
+        <div class="flex items-center">
+            <span class="mr-2">${type === 'success' ? '✓' : type === 'error' ? '✗' : 'ℹ'}</span>
+            <span>${message}</span>
+        </div>
+    `;
+    
+    document.body.appendChild(notification);
+    setTimeout(() => {
+        notification.remove();
+    }, 3000);
+}
+
+// ============= MENÚ MÓVIL =============
+
+function setupMobileMenu() {
     const menuToggle = document.getElementById('menuToggle');
     const nav = document.querySelector('nav');
     
     if (menuToggle) {
         menuToggle.addEventListener('click', function() {
             const navLinks = nav.querySelector('.md\\:flex');
-            navLinks.classList.toggle('hidden');
-            navLinks.classList.toggle('flex');
-            navLinks.classList.toggle('flex-col');
-            navLinks.classList.toggle('absolute');
-            navLinks.classList.toggle('top-full');
-            navLinks.classList.toggle('left-0');
-            navLinks.classList.toggle('w-full');
-            navLinks.classList.toggle('bg-gray-900');
-            navLinks.classList.toggle('py-4');
+            if (navLinks) {
+                navLinks.classList.toggle('hidden');
+                navLinks.classList.toggle('flex');
+                navLinks.classList.toggle('flex-col');
+                navLinks.classList.toggle('absolute');
+                navLinks.classList.toggle('top-full');
+                navLinks.classList.toggle('left-0');
+                navLinks.classList.toggle('w-full');
+                navLinks.classList.toggle('bg-gray-900');
+                navLinks.classList.toggle('py-4');
+            }
         });
     }
+}
 
-    // Smooth scroll con offset para header fijo
+// ============= SMOOTH SCROLL =============
+
+function setupSmoothScroll() {
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
         anchor.addEventListener('click', function (e) {
             e.preventDefault();
@@ -36,8 +155,11 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
+}
 
-    // Animación de aparición de elementos al hacer scroll
+// ============= ANIMACIONES DE SCROLL =============
+
+function setupScrollAnimations() {
     const observerOptions = {
         threshold: 0.1,
         rootMargin: '0px 0px -50px 0px'
@@ -52,23 +174,24 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }, observerOptions);
 
-    // Observar todas las tarjetas de categorías
-    document.querySelectorAll('.category-card').forEach(card => {
+    document.querySelectorAll('.game-card').forEach(card => {
         card.style.opacity = '0';
-        card.style.transform = 'translateY(50px)';
-        card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+        card.style.transform = 'translateY(20px)';
+        card.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
         observer.observe(card);
     });
 
-    // Observar tarjetas de características
     document.querySelectorAll('.feature-card').forEach(card => {
         card.style.opacity = '0';
         card.style.transform = 'translateY(30px)';
         card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
         observer.observe(card);
     });
+}
 
-    // Efecto parallax sutil en el hero
+// ============= EFECTOS ADICIONALES =============
+
+function setupAdditionalEffects() {
     window.addEventListener('scroll', function() {
         const scrolled = window.pageYOffset;
         const hero = document.querySelector('#inicio');
@@ -78,19 +201,15 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Efecto de hover mejorado en categorías
     document.querySelectorAll('.category-card').forEach(card => {
         card.addEventListener('mouseenter', function(e) {
             const rect = card.getBoundingClientRect();
             const x = e.clientX - rect.left;
             const y = e.clientY - rect.top;
-            
             const centerX = rect.width / 2;
             const centerY = rect.height / 2;
-            
             const deltaX = (x - centerX) / centerX;
             const deltaY = (y - centerY) / centerY;
-            
             card.style.transform = `translateY(-10px) perspective(1000px) rotateX(${-deltaY * 5}deg) rotateY(${deltaX * 5}deg)`;
         });
         
@@ -99,7 +218,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Agregar indicador de scroll
     const scrollIndicator = document.createElement('div');
     scrollIndicator.className = 'fixed bottom-8 right-8 z-50 opacity-0 transition-opacity duration-300';
     scrollIndicator.innerHTML = `
@@ -111,7 +229,6 @@ document.addEventListener('DOMContentLoaded', function() {
     `;
     document.body.appendChild(scrollIndicator);
 
-    // Mostrar/ocultar botón de scroll to top
     window.addEventListener('scroll', function() {
         if (window.pageYOffset > 300) {
             scrollIndicator.style.opacity = '1';
@@ -120,18 +237,16 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Scroll to top al hacer click
-    scrollIndicator.addEventListener('click', function() {
+    scrollIndicator.querySelector('button').addEventListener('click', function() {
         window.scrollTo({
             top: 0,
             behavior: 'smooth'
         });
     });
+}
 
-    console.log('ShikenShop inicializado correctamente! 🎮');
-});
+// ============= CARRITO =============
 
-// Función para actualizar el contador del carrito
 function updateCartCount() {
     const cart = JSON.parse(localStorage.getItem('cart')) || [];
     const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
@@ -139,14 +254,11 @@ function updateCartCount() {
     
     if (cartCount) {
         cartCount.textContent = totalItems;
-        
-        // Animación cuando cambia
         if (totalItems > 0) {
-            cartCount.style.animation = 'pulse 0.5s ease';
+            cartCount.classList.add('animate-bounce');
             setTimeout(() => {
-                cartCount.style.animation = '';
-            }, 500);
+                cartCount.classList.remove('animate-bounce');
+            }, 1000);
         }
     }
 }
-
