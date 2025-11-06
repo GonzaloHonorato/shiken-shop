@@ -1,0 +1,261 @@
+/* ===========================================
+   MY ACCOUNT PAGE STYLES
+   =========================================== */
+
+/* Base Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+    20%, 40%, 60%, 80% { transform: translateX(5px); }
+}
+
+/* Tab Styles */
+.tab-btn {
+    position: relative;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.tab-btn.active {
+    color: #a78bfa;
+    border-color: #a78bfa;
+}
+
+.tab-btn:hover {
+    color: #a78bfa;
+}
+
+/* Form Animations */
+.form-group {
+    animation: fadeIn 0.5s ease-out;
+}
+
+.input-field {
+    transition: all 0.3s ease;
+}
+
+.input-field:focus {
+    box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.1);
+}
+
+.input-field.error {
+    border-color: #f87171 !important;
+    animation: shake 0.5s ease;
+}
+
+.input-field.success {
+    border-color: #34d399 !important;
+}
+
+.error-msg {
+    animation: slideIn 0.3s ease;
+}
+
+/* Avatar Styles */
+#user-avatar {
+    box-shadow: 0 0 20px rgba(167, 139, 250, 0.5);
+    transition: transform 0.3s ease;
+}
+
+#user-avatar:hover {
+    transform: scale(1.05);
+}
+
+/* Button Animations */
+button[type="submit"] {
+    position: relative;
+    overflow: hidden;
+}
+
+button[type="submit"]::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+}
+
+button[type="submit"]:hover::before {
+    width: 300px;
+    height: 300px;
+}
+
+button[type="submit"]:active {
+    transform: scale(0.98);
+}
+
+/* Loading State */
+.loading {
+    pointer-events: none;
+    opacity: 0.6;
+}
+
+.loading button {
+    position: relative;
+}
+
+.loading button::after {
+    content: '';
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    top: 50%;
+    left: 50%;
+    margin-left: -8px;
+    margin-top: -8px;
+    border: 2px solid #ffffff;
+    border-radius: 50%;
+    border-top-color: transparent;
+    animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Notification Styles */
+#notification {
+    animation: slideIn 0.3s ease;
+    transition: all 0.3s ease;
+}
+
+#notification.success {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    border-left: 4px solid #34d399;
+}
+
+#notification.error {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    border-left: 4px solid #f87171;
+}
+
+#notification.info {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    border-left: 4px solid #60a5fa;
+}
+
+#notification.warning {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    border-left: 4px solid #fbbf24;
+}
+
+/* Tab Content Transitions */
+.tab-content {
+    animation: fadeIn 0.4s ease;
+}
+
+/* Password Toggle Button */
+.toggle-password {
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.toggle-password:hover {
+    transform: scale(1.1);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .grid-cols-1 {
+        grid-template-columns: 1fr;
+    }
+    
+    #user-avatar {
+        width: 80px;
+        height: 80px;
+    }
+    
+    #display-name {
+        font-size: 1.5rem;
+    }
+}
+
+/* Focus Visible for Accessibility */
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible {
+    outline: 2px solid #a78bfa;
+    outline-offset: 2px;
+}
+
+/* Custom Scrollbar */
+textarea::-webkit-scrollbar {
+    width: 8px;
+}
+
+textarea::-webkit-scrollbar-track {
+    background: rgba(31, 41, 55, 0.5);
+    border-radius: 4px;
+}
+
+textarea::-webkit-scrollbar-thumb {
+    background: #6b7280;
+    border-radius: 4px;
+}
+
+textarea::-webkit-scrollbar-thumb:hover {
+    background: #9ca3af;
+}
+
+/* Disabled State */
+input:disabled,
+textarea:disabled,
+button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Success/Error Icons */
+.form-group.success .input-field {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='%2334d399' viewBox='0 0 24 24'%3E%3Cpath d='M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 20px;
+    padding-right: 40px;
+}
+
+.form-group.error .input-field {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='%23f87171' viewBox='0 0 24 24'%3E%3Cpath d='M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 20px;
+    padding-right: 40px;
+}

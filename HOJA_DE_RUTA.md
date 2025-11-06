@@ -1,4 +1,4 @@
-# 🗺️ HOJA DE RUTA - ShikenShop Fase 2
+# 🗺️ HOJA DE RUTA - ShikenShop
 ## Sistema de Autenticación y Gestión con Roles
 
 ---
@@ -16,48 +16,69 @@ Implementar un sistema completo de autenticación con dos roles (Comprador y Adm
 
 ---
 
-## 🎯 FASE 1: SISTEMA DE AUTENTICACIÓN
+## ✅ FASE 1: SISTEMA DE AUTENTICACIÓN (COMPLETADA)
 
-### 1.1 Login System
-**Prioridad: ALTA** | **Estimado: 2-3 horas**
+### 1.1 Login System ✅
+**Prioridad: ALTA** | **Estimado: 2-3 horas** | **Estado: COMPLETADO**
 
-#### Archivos a crear:
+#### Archivos creados:
 ```
 pages/
 ├── auth/
-│   ├── login.html
-│   ├── login.css
-│   └── login.js
+│   ├── login.html               ✅
+│   ├── login.css                ✅
+│   ├── login.js                 ✅
+│   ├── forgot-password.html     ✅
+│   └── forgot-password.js       ✅
 ```
 
-#### Funcionalidades:
+#### Funcionalidades implementadas:
 - ✅ Formulario de login (email/username + password)
 - ✅ Validación de credenciales contra LocalStorage
 - ✅ Manejo de roles (buyer/admin)
 - ✅ Redirección según rol
 - ✅ Recordar sesión
-- ✅ Botón "Olvidé mi contraseña"
+- ✅ Protección contra fuerza bruta (5 intentos, bloqueo 15 min)
+- ✅ Link a "Olvidé mi contraseña"
+- ✅ Sistema de recuperación de contraseña con código de 6 dígitos
 - ✅ Link a registro
-- ✅ Animaciones de carga
+- ✅ Animaciones de carga y efectos visuales
 
 #### Usuarios Hardcoded (LocalStorage):
 ```javascript
-const defaultUsers = [
+const HARDCODED_USERS = [
     {
-        id: 1,
+        id: 'user_001',
         username: 'admin',
         email: 'admin@shikenshop.com',
-        password: 'Admin123', // En producción usar hash
+        password: 'Admin123',
         role: 'admin',
-        fullName: 'Administrador Principal'
+        fullName: 'Administrador Principal',
+        phone: '+56 9 1234 5678',
+        birthdate: '1990-01-01',
+        address: 'Santiago, Chile'
     },
     {
-        id: 2,
+        id: 'user_002',
         username: 'comprador1',
         email: 'comprador@test.com',
         password: 'Comprador123',
         role: 'buyer',
-        fullName: 'Juan Pérez'
+        fullName: 'Juan Pérez',
+        phone: '+56 9 8765 4321',
+        birthdate: '1995-06-15',
+        address: 'Valparaíso, Chile'
+    },
+    {
+        id: 'user_003',
+        username: 'maria_gomez',
+        email: 'maria.gomez@test.com',
+        password: 'Maria123',
+        role: 'buyer',
+        fullName: 'María Gómez',
+        phone: '+56 9 5555 5555',
+        birthdate: '1992-03-20',
+        address: 'Concepción, Chile'
     }
 ];
 ```
@@ -65,39 +86,174 @@ const defaultUsers = [
 #### Estados de sesión:
 ```javascript
 sessionData = {
-    isLoggedIn: boolean,
-    userId: number,
+    userId: string,
     username: string,
     email: string,
+    fullName: string,
     role: 'admin' | 'buyer',
-    token: string,
-    loginTime: timestamp
+    loginTime: timestamp,
+    lastActivity: timestamp
 }
 ```
 
 ---
 
-### 1.2 Auth Guard / Middleware
-**Prioridad: ALTA** | **Estimado: 1 hora**
+### 1.2 Auth Guard / Middleware ✅
+**Prioridad: ALTA** | **Estimado: 1 hora** | **Estado: COMPLETADO**
 
-#### Archivo a crear:
+#### Archivo creado:
 ```
 scripts/
-└── auth-guard.js
+└── auth-guard.js                ✅
 ```
 
-#### Funcionalidades:
+#### Funcionalidades implementadas:
 - ✅ Verificar si usuario está logueado
 - ✅ Validar rol requerido para cada página
 - ✅ Redireccionar si no autorizado
-- ✅ Renovar token automáticamente
-- ✅ Cerrar sesión automática (timeout)
+- ✅ Renovar sesión automáticamente
+- ✅ Cerrar sesión con timeout (30 minutos de inactividad)
+- ✅ Funciones: requireAuth(), isLoggedIn(), hasRole(), getSession(), logout()
 
-#### Implementación:
-```javascript
-// Incluir en cada página protegida
-<script src="../../scripts/auth-guard.js"></script>
-<script>
+---
+
+### 1.3 Data Initialization ✅
+**Prioridad: ALTA** | **Estimado: 1 hora** | **Estado: COMPLETADO**
+
+#### Archivo creado:
+```
+scripts/
+└── init-data.js                 ✅
+```
+
+#### Datos inicializados:
+- ✅ 3 usuarios hardcodeados (1 admin, 2 buyers)
+- ✅ 12 productos (3 por categoría: Acción, RPG, Estrategia, Aventura)
+- ✅ 3 órdenes de ejemplo
+- ✅ Inicialización automática en primer acceso
+
+---
+
+### 1.4 Registration System Updates ✅
+**Prioridad: ALTA** | **Estimado: 1 hora** | **Estado: COMPLETADO**
+
+#### Archivo actualizado:
+```
+pages/
+└── registro/
+    └── registro.js              ✅
+```
+
+#### Funcionalidades implementadas:
+- ✅ Asignación automática de rol "buyer"
+- ✅ Generación de ID único (user_timestamp)
+- ✅ Redirección a login después de registro exitoso
+- ✅ Validación de duplicados (email/username)
+
+---
+
+### 1.5 Dynamic Navigation UI ✅
+**Prioridad: ALTA** | **Estimado: 2 horas** | **Estado: COMPLETADO**
+
+#### Archivos actualizados:
+```
+index.html                       ✅
+scripts/index.js                 ✅
+```
+
+#### Funcionalidades implementadas:
+- ✅ Menú para usuarios invitados (Login/Registrarse)
+- ✅ Menú para usuarios autenticados (Avatar, Dropdown)
+- ✅ Dropdown con opciones: Mi Panel, Mi Cuenta, Cerrar Sesión
+- ✅ Redirección dinámica según rol (admin/buyer panel)
+- ✅ Contador de carrito actualizado
+- ✅ Confirmación antes de cerrar sesión
+
+---
+
+### 1.6 Password Recovery System ✅
+**Prioridad: ALTA** | **Estimado: 2 horas** | **Estado: COMPLETADO**
+
+#### Archivos creados:
+```
+pages/
+└── auth/
+    ├── forgot-password.html     ✅
+    └── forgot-password.js       ✅
+```
+
+#### Funcionalidades implementadas:
+- ✅ Proceso de 3 pasos (Email → Código → Nueva Contraseña)
+- ✅ Generación de código de 6 dígitos
+- ✅ Validación de email contra usuarios registrados
+- ✅ Token temporal con expiración (15 minutos)
+- ✅ Opción para reenviar código
+- ✅ Medidor de fortaleza de contraseña
+- ✅ Validación de requisitos de contraseña
+
+---
+
+### 1.7 Account Management ✅
+**Prioridad: ALTA** | **Estimado: 3 horas** | **Estado: COMPLETADO**
+
+#### Archivos creados:
+```
+pages/
+└── mi-cuenta/
+    ├── mi-cuenta.html           ✅
+    ├── mi-cuenta.css            ✅
+    └── mi-cuenta.js             ✅
+```
+
+#### Funcionalidades implementadas:
+- ✅ Sistema de pestañas (Perfil / Seguridad)
+- ✅ Edición de perfil completo:
+  - ✅ Nombre completo
+  - ✅ Nombre de usuario
+  - ✅ Correo electrónico
+  - ✅ Teléfono
+  - ✅ Fecha de nacimiento
+  - ✅ Dirección
+- ✅ Avatar dinámico generado automáticamente
+- ✅ Validación en tiempo real de campos
+- ✅ Cambio de contraseña con validación de contraseña actual
+- ✅ Botón cancelar para descartar cambios
+- ✅ Toggle de visibilidad para contraseñas
+- ✅ Notificaciones de éxito/error
+- ✅ Prevención de duplicados (email/username)
+- ✅ Actualización automática de sesión si cambia email
+
+---
+
+## 📊 RESUMEN FASE 1
+
+### ✅ Completado: 100%
+- Sistema de login completo con validaciones
+- Middleware de autenticación (auth-guard.js)
+- Datos hardcodeados inicializados
+- Registro actualizado con asignación de roles
+- UI dinámica en navegación principal
+- Sistema de recuperación de contraseña
+- Gestión completa de cuenta de usuario
+
+### 📁 Archivos creados: 11
+- pages/auth/login.html
+- pages/auth/login.css
+- pages/auth/login.js
+- pages/auth/forgot-password.html
+- pages/auth/forgot-password.js
+- pages/mi-cuenta/mi-cuenta.html
+- pages/mi-cuenta/mi-cuenta.css
+- pages/mi-cuenta/mi-cuenta.js
+- scripts/auth-guard.js
+- scripts/init-data.js
+- ✏️ Actualizados: index.html, scripts/index.js, pages/registro/registro.js, README.md
+
+### ⏱️ Tiempo total estimado: ~15 horas
+
+---
+
+## 🎯 FASE 2: REESTRUCTURACIÓN DE CARPETAS
     requireAuth(['admin']); // o ['buyer'] o ['admin', 'buyer']
 </script>
 ```

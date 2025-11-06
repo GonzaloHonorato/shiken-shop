@@ -2,46 +2,93 @@
 
 ## Descripción del Proyecto
 
-ShikenShop es una tienda de videojuegos moderna y atractiva desarrollada como proyecto académico. La tienda ofrece una experiencia de navegación fluida y visualmente atractiva para explorar diferentes categorías de videojuegos.
+ShikenShop es una tienda de videojuegos moderna y avanzada desarrollada como proyecto académico. La tienda ofrece una experiencia completa con sistema de autenticación, gestión de usuarios, carritos de compra y paneles de administración.
+
+## 🚀 Características Principales
+
+### ✅ Sistema de Autenticación
+- **Login con validación**: Email y contraseña con validación en tiempo real
+- **Registro de usuarios**: Con asignación automática de rol "comprador"
+- **Recuperación de contraseña**: Sistema de códigos de verificación de 6 dígitos
+- **Protección de rutas**: Middleware `auth-guard.js` para páginas protegidas
+- **Gestión de sesiones**: Control de sesiones con localStorage (30 minutos de inactividad)
+- **Protección contra fuerza bruta**: Máximo 5 intentos, bloqueo de 15 minutos
+
+### 👤 Sistema de Roles
+- **Administrador**: Acceso a panel de gestión de productos y ventas
+- **Comprador**: Acceso a historial de compras y gestión de cuenta
+
+### 📝 Gestión de Cuenta
+- **Mi Cuenta**: Edición de perfil (nombre, email, usuario, teléfono, dirección)
+- **Cambio de contraseña**: Con validación de contraseña actual
+- **Avatar dinámico**: Generado automáticamente con iniciales
+- **Validación en tiempo real**: Feedback inmediato en formularios
+
+### 🔐 Cuentas Hardcodeadas
+```javascript
+// Administrador
+Email: admin@shikenshop.com
+Contraseña: Admin123
+
+// Compradores
+Email: comprador@test.com
+Contraseña: Comprador123
+
+Email: maria.gomez@test.com
+Contraseña: Maria123
+```
 
 ## Estructura del Proyecto
 
 ```
 codebase/
-├── index.html                 # Página principal
+├── index.html                 # Página principal con menú dinámico
+├── HOJA_DE_RUTA.md           # Roadmap completo del proyecto (7 fases)
+├── README.md                 # Este archivo
 ├── styles/
-│   └── index.css             # Estilos globales con variables CSS y animaciones
+│   └── index.css             # Estilos globales
 ├── scripts/
-│   └── index.js              # JavaScript para interactividad global
+│   ├── index.js              # JavaScript principal + auth UI
+│   ├── auth-guard.js         # Middleware de autenticación
+│   └── init-data.js          # Inicialización de datos hardcodeados
 ├── assets/
 │   └── images/               # Directorio para imágenes
 └── pages/
-    ├── accion/
-    │   ├── accion.html       # Página de juegos de acción
-    │   ├── accion.css        # Estilos específicos de acción
-    │   └── accion.js         # JavaScript específico de acción
-    ├── rpg/
-    │   ├── rpg.html          # Página de juegos RPG
-    │   ├── rpg.css           # Estilos específicos de RPG
-    │   └── rpg.js            # JavaScript específico de RPG
-    ├── estrategia/
-    │   ├── estrategia.html   # Página de juegos de estrategia
-    │   ├── estrategia.css    # Estilos específicos de estrategia
-    │   └── estrategia.js     # JavaScript específico de estrategia
-    └── aventura/
-        ├── aventura.html     # Página de juegos de aventura
-        ├── aventura.css      # Estilos específicos de aventura
-        └── aventura.js       # JavaScript específico de aventura
+    ├── auth/                 # Sistema de autenticación
+    │   ├── login.html        # Página de inicio de sesión
+    │   ├── login.css         # Estilos del login
+    │   ├── login.js          # Lógica de autenticación
+    │   ├── forgot-password.html  # Recuperación de contraseña
+    │   └── forgot-password.js    # Lógica de recuperación
+    ├── mi-cuenta/            # Gestión de cuenta
+    │   ├── mi-cuenta.html    # Página de perfil
+    │   ├── mi-cuenta.css     # Estilos del perfil
+    │   └── mi-cuenta.js      # Lógica de edición de perfil
+    ├── registro/
+    │   ├── registro.html     # Página de registro
+    │   ├── registro.css      # Estilos del registro
+    │   └── registro.js       # Lógica de registro (asigna rol buyer)
+    ├── carrito/
+    │   ├── carrito.html      # Carrito de compras
+    │   ├── carrito.css       # Estilos del carrito
+    │   └── carrito.js        # Lógica del carrito
+    ├── accion/               # Categoría: Juegos de Acción
+    │   ├── accion.html
+    │   ├── accion.css
+    │   └── accion.js
+    ├── rpg/                  # Categoría: Juegos RPG
+    │   ├── rpg.html
+    │   ├── rpg.css
+    │   └── rpg.js
+    ├── estrategia/           # Categoría: Juegos de Estrategia
+    │   ├── estrategia.html
+    │   ├── estrategia.css
+    │   └── estrategia.js
+    └── aventura/             # Categoría: Juegos de Aventura
+        ├── aventura.html
+        ├── aventura.css
+        └── aventura.js
 ```
-
-## Características Principales
-
-### 1. Página Principal (index.html)
-- **Nombre de la PYME**: ShikenShop
-- **Hero Section**: Banner llamativo con gradientes y animaciones
-- **Grid de Categorías**: 4 categorías con iconos SVG, hipervínculos y efectos hover
-- **Features Section**: Destacados de la tienda (mejores precios, entrega rápida, compra segura)
-- **Footer**: Información de contacto y redes sociales
 
 ### 2. Categorías Implementadas
 
