@@ -4,11 +4,16 @@
 
 // Check authentication on page load
 document.addEventListener('DOMContentLoaded', () => {
+    console.log('🚀 Mi Cuenta - Página cargada');
+    console.log('🔐 Verificando autenticación...');
+    
     // Require authentication (any authenticated user can access)
     if (!requireAuth()) {
+        console.error('❌ Autenticación fallida, redirigiendo...');
         return;
     }
 
+    console.log('✅ Usuario autenticado, inicializando página...');
     // Initialize page
     initializePage();
     setupEventListeners();
@@ -30,17 +35,27 @@ function initializePage() {
  * Load current user data into form
  */
 function loadUserData() {
-    const session = getSession();
+    console.log('🔍 Cargando datos del usuario...');
+    
+    const session = getCurrentUser();
+    console.log('📦 Sesión:', session);
+    
     if (!session) {
+        console.error('❌ No hay sesión activa');
         redirectToLogin();
         return;
     }
 
     // Get full user data from localStorage
     const users = JSON.parse(localStorage.getItem('users')) || [];
+    console.log('👥 Usuarios en localStorage:', users);
+    console.log('🔎 Buscando usuario con email:', session.email);
+    
     const currentUser = users.find(u => u.email === session.email);
+    console.log('✅ Usuario encontrado:', currentUser);
 
     if (!currentUser) {
+        console.error('❌ Usuario no encontrado en localStorage');
         showNotification('Error al cargar datos del usuario', 'error');
         return;
     }
@@ -50,17 +65,46 @@ function loadUserData() {
 
     // Populate avatar and display info
     const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.fullName)}&background=7c3aed&color=fff&size=200`;
-    document.getElementById('user-avatar').src = avatarUrl;
-    document.getElementById('display-name').textContent = currentUser.fullName;
-    document.getElementById('display-role').textContent = currentUser.role === 'admin' ? 'Administrador' : 'Comprador';
+    const avatarElement = document.getElementById('user-avatar');
+    const nameElement = document.getElementById('display-name');
+    const roleElement = document.getElementById('display-role');
+    
+    if (avatarElement) {
+        avatarElement.src = avatarUrl;
+        console.log('🖼️ Avatar configurado');
+    }
+    if (nameElement) {
+        nameElement.textContent = currentUser.fullName;
+        console.log('👤 Nombre configurado:', currentUser.fullName);
+    }
+    if (roleElement) {
+        roleElement.textContent = currentUser.role === 'admin' ? 'Administrador' : 'Comprador';
+        console.log('🎭 Rol configurado:', currentUser.role);
+    }
 
     // Populate form fields
-    document.getElementById('fullName').value = currentUser.fullName || '';
-    document.getElementById('username').value = currentUser.username || '';
-    document.getElementById('email').value = currentUser.email || '';
-    document.getElementById('phone').value = currentUser.phone || '';
-    document.getElementById('birthdate').value = currentUser.birthdate || '';
-    document.getElementById('address').value = currentUser.address || '';
+    const fields = {
+        fullName: currentUser.fullName || '',
+        username: currentUser.username || '',
+        email: currentUser.email || '',
+        phone: currentUser.phone || '',
+        birthdate: currentUser.birthdate || '',
+        address: currentUser.address || ''
+    };
+    
+    console.log('📝 Campos a rellenar:', fields);
+    
+    Object.keys(fields).forEach(fieldName => {
+        const element = document.getElementById(fieldName);
+        if (element) {
+            element.value = fields[fieldName];
+            console.log(`✓ Campo ${fieldName} rellenado:`, fields[fieldName]);
+        } else {
+            console.warn(`⚠️ Elemento no encontrado: ${fieldName}`);
+        }
+    });
+    
+    console.log('✅ Datos del usuario cargados completamente');
 }
 
 /**
@@ -172,7 +216,7 @@ function handleProfileUpdate(e) {
     }
 
     // Get current session and users
-    const session = getSession();
+    const session = getCurrentUser();
     const users = JSON.parse(localStorage.getItem('users')) || [];
     const currentUserIndex = users.findIndex(u => u.email === session.email);
 
@@ -275,7 +319,7 @@ function handlePasswordChange(e) {
     }
 
     // Get current user
-    const session = getSession();
+    const session = getCurrentUser();
     const users = JSON.parse(localStorage.getItem('users')) || [];
     const currentUserIndex = users.findIndex(u => u.email === session.email);
 

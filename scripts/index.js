@@ -80,13 +80,11 @@ function setupDashboardLinks() {
             }
         }
         
-        if (accountLink) {
-            if (sessionData.role === 'admin') {
-                accountLink.href = './pages/admin/perfil/perfil.html';
-            } else {
-                accountLink.href = './pages/buyer/mi-cuenta/mi-cuenta.html';
-            }
-        }
+        // El enlace de Mi Cuenta es el mismo para todos los roles (por ahora en Fase 1)
+        // No necesitamos sobrescribir el href que ya está en el HTML
+        // if (accountLink) {
+        //     accountLink.href = './pages/mi-cuenta/mi-cuenta.html';
+        // }
     } catch (error) {
         console.error('Error al configurar enlaces:', error);
     }
