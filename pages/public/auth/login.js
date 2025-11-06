@@ -253,9 +253,9 @@ function handleFailedLogin() {
 // ===================================
 function redirectToDashboard(role) {
     if (role === 'admin') {
-        window.location.href = '../../index.html'; // Temporal - cambiar cuando exista admin dashboard
+        window.location.href = '../../admin/dashboard/dashboard.html';
     } else {
-        window.location.href = '../../index.html'; // Temporal - cambiar cuando exista buyer dashboard
+        window.location.href = '../../buyer/dashboard/dashboard.html';
     }
 }
 

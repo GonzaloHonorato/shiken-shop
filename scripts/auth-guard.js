@@ -5,8 +5,8 @@
 
 const AUTH_CONFIG = {
     SESSION_TIMEOUT: 30 * 60 * 1000, // 30 minutos
-    LOGIN_URL: '/pages/auth/login.html',
-    UNAUTHORIZED_URL: '/pages/auth/login.html'
+    LOGIN_URL: '/pages/public/auth/login.html',
+    UNAUTHORIZED_URL: '/pages/public/auth/login.html'
 };
 
 // ===================================

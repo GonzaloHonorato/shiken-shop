@@ -24,7 +24,7 @@ function initializeFormValidation() {
             
             // Redirigir a login después de registro exitoso
             setTimeout(() => {
-                window.location.href = '../auth/login.html?registered=true';
+                window.location.href = '../public/auth/login.html?registered=true';
             }, 2000);
         }
     });
