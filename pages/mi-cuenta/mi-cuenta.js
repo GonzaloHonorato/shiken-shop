@@ -178,7 +178,8 @@ function setupEventListeners() {
     document.getElementById('confirm-password').addEventListener('input', validateConfirmPasswordField);
 
     // Logout button
-    document.getElementById('logout-btn').addEventListener('click', () => {
+    document.getElementById('logout-btn').addEventListener('click', (e) => {
+        e.preventDefault();
         if (confirm('¿Estás seguro de que deseas cerrar sesión?')) {
             logout();
             window.location.href = '../../index.html';
