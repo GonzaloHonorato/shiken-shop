@@ -28,6 +28,47 @@
         }
     }
 
+    // Obtener rutas relativas según la ubicación actual
+    function getRelativePaths() {
+        const currentPath = window.location.pathname;
+        
+        // Detectar en qué carpeta estamos
+        if (currentPath.includes('/pages/public/')) {
+            return {
+                adminDashboard: '../../admin/dashboard/dashboard.html',
+                buyerDashboard: '../../buyer/dashboard/dashboard.html',
+                miCuenta: '../../mi-cuenta/mi-cuenta.html',
+                login: '../auth/login.html',
+                index: '../../../index.html'
+            };
+        } else if (currentPath.includes('/pages/admin/')) {
+            return {
+                adminDashboard: '../dashboard/dashboard.html',
+                buyerDashboard: '../../buyer/dashboard/dashboard.html',
+                miCuenta: '../../mi-cuenta/mi-cuenta.html',
+                login: '../../public/auth/login.html',
+                index: '../../../index.html'
+            };
+        } else if (currentPath.includes('/pages/buyer/')) {
+            return {
+                adminDashboard: '../../admin/dashboard/dashboard.html',
+                buyerDashboard: '../dashboard/dashboard.html',
+                miCuenta: '../../mi-cuenta/mi-cuenta.html',
+                login: '../../public/auth/login.html',
+                index: '../../../index.html'
+            };
+        } else {
+            // Por defecto (desde index.html o carpeta raíz)
+            return {
+                adminDashboard: './pages/admin/dashboard/dashboard.html',
+                buyerDashboard: './pages/buyer/dashboard/dashboard.html',
+                miCuenta: './pages/mi-cuenta/mi-cuenta.html',
+                login: './pages/public/auth/login.html',
+                index: './index.html'
+            };
+        }
+    }
+
     // Actualizar navegación con sesión
     function updateNavigation() {
         const session = checkSession();
@@ -38,6 +79,9 @@
         // Buscar el contenedor de links
         const linksContainer = navContainer.querySelector('.md\\:flex');
         if (!linksContainer) return;
+
+        // Obtener rutas relativas
+        const paths = getRelativePaths();
 
         // Si hay sesión, agregar opciones de usuario
         if (session) {
@@ -59,14 +103,14 @@
             
             // Determinar dashboard según rol
             const dashboardUrl = session.role === 'admin' 
-                ? '/pages/admin/dashboard/dashboard.html'
-                : '/pages/buyer/dashboard/dashboard.html';
+                ? paths.adminDashboard
+                : paths.buyerDashboard;
 
             userMenu.innerHTML = `
                 <a href="${dashboardUrl}" class="text-white hover:text-indigo-400 transition-colors duration-300">
                     Dashboard
                 </a>
-                <a href="/pages/mi-cuenta/mi-cuenta.html" class="text-white hover:text-indigo-400 transition-colors duration-300">
+                <a href="${paths.miCuenta}" class="text-white hover:text-indigo-400 transition-colors duration-300">
                     Mi Cuenta
                 </a>
                 <div class="flex items-center space-x-2">
@@ -102,7 +146,7 @@
                 const registroLink = linksContainer.querySelector('a[href*="registro"]');
                 if (!registroLink) {
                     const newLoginLink = document.createElement('a');
-                    newLoginLink.href = '/pages/public/auth/login.html';
+                    newLoginLink.href = paths.login;
                     newLoginLink.className = 'text-white hover:text-indigo-400 transition-colors duration-300';
                     newLoginLink.textContent = 'Iniciar Sesión';
                     
@@ -122,7 +166,9 @@
         if (confirm('¿Estás seguro de que deseas cerrar sesión?')) {
             localStorage.removeItem('session');
             localStorage.removeItem('currentUser');
-            window.location.href = '/index.html';
+            
+            const paths = getRelativePaths();
+            window.location.href = paths.index;
         }
     }
 
@@ -144,6 +190,8 @@
 
     // Interceptar clicks en "Proceder a pagar"
     function interceptCheckout() {
+        const paths = getRelativePaths();
+        
         // Buscar todos los botones de checkout
         const checkoutButtons = document.querySelectorAll('[onclick*="checkout"], [href*="checkout"], button:contains("Proceder"), a:contains("Proceder")');
         
@@ -155,8 +203,7 @@
                     e.stopPropagation();
                     
                     if (confirm('Debes iniciar sesión para continuar con la compra. ¿Deseas ir al login?')) {
-                        const currentUrl = window.location.pathname;
-                        window.location.href = `/pages/public/auth/login.html?returnUrl=${encodeURIComponent(currentUrl)}`;
+                        window.location.href = paths.login;
                     }
                     return false;
                 }
