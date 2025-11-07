@@ -12,93 +12,285 @@ Implementar un sistema completo de autenticación con dos roles (Comprador y Adm
 - HTML5 + Tailwind CSS
 - JavaScript (ES6+)
 - LocalStorage para persistencia
-- Sistema de roles basado en tokens
+- Sistema de roles basado en sesiones
+
+### Estado del Proyecto: 🟢 85% COMPLETADO
 
 ---
 
-## ✅ FASE 1: SISTEMA DE AUTENTICACIÓN (COMPLETADA)
+## ✅ FASE 1: SISTEMA DE AUTENTICACIÓN (100% COMPLETADA)
 
 ### 1.1 Login System ✅
-**Prioridad: ALTA** | **Estimado: 2-3 horas** | **Estado: COMPLETADO**
+**Prioridad: ALTA** | **Estado: COMPLETADO**
 
 #### Archivos creados:
 ```
-pages/
-├── auth/
-│   ├── login.html               ✅
-│   ├── login.css                ✅
-│   ├── login.js                 ✅
-│   ├── forgot-password.html     ✅
-│   └── forgot-password.js       ✅
+pages/public/auth/
+├── login.html               ✅
+├── login.css                ✅
+├── login.js                 ✅
+├── forgot-password.html     ✅
+└── forgot-password.js       ✅
 ```
 
 #### Funcionalidades implementadas:
-- ✅ Formulario de login (email/username + password)
+- ✅ Formulario de login (email + password)
 - ✅ Validación de credenciales contra LocalStorage
 - ✅ Manejo de roles (buyer/admin)
-- ✅ Redirección según rol
-- ✅ Recordar sesión
+- ✅ Redirección según rol a dashboards específicos
+- ✅ Sistema de sesión con timeout (30 minutos)
 - ✅ Protección contra fuerza bruta (5 intentos, bloqueo 15 min)
-- ✅ Link a "Olvidé mi contraseña"
-- ✅ Sistema de recuperación de contraseña con código de 6 dígitos
+- ✅ Recuperación de contraseña con código de 6 dígitos
 - ✅ Link a registro
-- ✅ Animaciones de carga y efectos visuales
+- ✅ Animaciones y efectos visuales
 
-#### Usuarios Hardcoded (LocalStorage):
+#### Usuarios de Prueba:
 ```javascript
-const HARDCODED_USERS = [
-    {
-        id: 'user_001',
-        username: 'admin',
-        email: 'admin@shikenshop.com',
-        password: 'Admin123',
-        role: 'admin',
-        fullName: 'Administrador Principal',
-        phone: '+56 9 1234 5678',
-        birthdate: '1990-01-01',
-        address: 'Santiago, Chile'
-    },
-    {
-        id: 'user_002',
-        username: 'comprador1',
-        email: 'comprador@test.com',
-        password: 'Comprador123',
-        role: 'buyer',
-        fullName: 'Juan Pérez',
-        phone: '+56 9 8765 4321',
-        birthdate: '1995-06-15',
-        address: 'Valparaíso, Chile'
-    },
-    {
-        id: 'user_003',
-        username: 'maria_gomez',
-        email: 'maria.gomez@test.com',
-        password: 'Maria123',
-        role: 'buyer',
-        fullName: 'María Gómez',
-        phone: '+56 9 5555 5555',
-        birthdate: '1992-03-20',
-        address: 'Concepción, Chile'
-    }
-];
-```
-
-#### Estados de sesión:
-```javascript
-sessionData = {
-    userId: string,
-    username: string,
-    email: string,
-    fullName: string,
-    role: 'admin' | 'buyer',
-    loginTime: timestamp,
-    lastActivity: timestamp
-}
+- Admin: admin@shikenshop.com / Admin123
+- Buyer: comprador@test.com / Comprador123
+- Buyer: maria.gomez@test.com / Maria123
+- Buyer: carlos.rodriguez@test.com / Carlos123
+- Buyer: ana.silva@test.com / Ana123
 ```
 
 ---
 
-### 1.2 Auth Guard / Middleware ✅
+## ✅ FASE 2: REESTRUCTURACIÓN Y PANELES (100% COMPLETADA)
+
+### 2.1 Reestructuración de Carpetas ✅
+**Estado: COMPLETADO**
+
+#### Nueva estructura:
+```
+pages/
+├── public/              ✅ (Catálogo público)
+│   ├── auth/
+│   ├── accion/
+│   ├── rpg/
+│   ├── estrategia/
+│   ├── aventura/
+│   └── carrito/
+├── admin/              ✅ (Panel administrador)
+│   ├── dashboard/
+│   ├── productos/
+│   ├── ventas/
+│   └── usuarios/
+├── buyer/              ✅ (Panel comprador)
+│   ├── dashboard/
+│   └── mis-compras/
+├── registro/           ✅
+└── mi-cuenta/          ✅
+```
+
+### 2.2 Panel de Administrador ✅
+**Estado: COMPLETADO**
+
+#### Dashboard Admin ✅
+- ✅ Estadísticas generales (productos, usuarios, ventas, ingresos)
+- ✅ Navegación a secciones de gestión
+- ✅ Protección con requireAuth(['admin'])
+
+#### Gestión de Productos ✅
+- ✅ Tabla con listado completo
+- ✅ Filtros (búsqueda, categoría, stock)
+- ✅ CRUD completo (Crear, Leer, Actualizar, Eliminar)
+- ✅ Modal para formulario
+- ✅ Gestión de precios, descuentos y stock
+- ✅ Vista previa de imagen
+
+#### Gestión de Usuarios ✅
+- ✅ Tabla con todos los usuarios
+- ✅ Filtros (búsqueda, rol)
+- ✅ Estadísticas (total, compradores, admins)
+- ✅ Ver detalles de usuario
+- ✅ Cambiar roles
+- ✅ Historial de compras por usuario
+
+#### Gestión de Ventas ✅
+- ✅ Tabla de órdenes
+- ✅ Filtros (búsqueda, estado, ordenamiento)
+- ✅ Estadísticas (total ventas, órdenes, pendientes, completadas)
+- ✅ Ver detalles de cada orden
+- ✅ Cambiar estado de órdenes
+- ✅ Visualización de productos por orden
+
+### 2.3 Panel de Comprador ✅
+**Estado: COMPLETADO**
+
+#### Dashboard Buyer ✅
+- ✅ Navegación a Mis Compras, Carrito, Mi Cuenta
+- ✅ Accesos rápidos a categorías
+- ✅ Contador de carrito
+- ✅ Protección con requireAuth(['buyer'])
+
+#### Mis Compras ✅
+- ✅ Historial de órdenes del usuario
+- ✅ Filtros (búsqueda, estado)
+- ✅ Estadísticas personales (compras, gastado, juegos)
+- ✅ Vista detallada de cada orden
+- ✅ Estados visuales (pendiente, completado, cancelado)
+- ✅ Estado vacío cuando no hay compras
+
+---
+
+## ✅ FASE 3: AUTH GUARD Y MIDDLEWARE (100% COMPLETADA)
+
+### 3.1 Sistema de Protección de Rutas ✅
+**Estado: COMPLETADO**
+
+#### auth-guard.js ✅
+```javascript
+- ✅ requireAuth(allowedRoles)
+- ✅ requireGuest()
+- ✅ getCurrentUser()
+- ✅ isLoggedIn()
+- ✅ checkAuth()
+- ✅ clearSession()
+- ✅ redirectToDashboard(role)
+- ✅ redirectToLogin()
+```
+
+#### Características:
+- ✅ Validación de sesión con timeout
+- ✅ Renovación automática de timestamp
+- ✅ Verificación de roles
+- ✅ Redirección según rol
+- ✅ Protección de rutas admin/buyer
+
+---
+
+## ✅ FASE 4: DATOS DE PRUEBA (100% COMPLETADA)
+
+### 4.1 init-data.js ✅
+**Estado: COMPLETADO**
+
+#### Datos inicializados:
+- ✅ 5 usuarios (1 admin, 4 buyers)
+- ✅ 12+ productos en 4 categorías
+- ✅ 10 órdenes de ejemplo con diferentes estados
+- ✅ Sistema de inicialización automática
+- ✅ Función de reset (resetAllData)
+
+---
+
+## 🟡 FASE 5: MEJORAS PENDIENTES (60% COMPLETADA)
+
+### 5.1 Headers/Navigation ⚠️
+**Prioridad: ALTA** | **Estado: EN PROGRESO**
+
+#### Problemas identificados:
+- ⚠️ Headers de categorías no muestran sesión iniciada
+- ⚠️ Botón "Proceder a pagar" redirige a registro en vez de verificar sesión
+- ⚠️ Falta consistencia en la navegación entre secciones
+
+#### Solución requerida:
+- 🔲 Crear componente de header reutilizable
+- 🔲 Detectar sesión activa y mostrar opciones de usuario
+- 🔲 Botón de logout en todas las páginas
+- 🔲 Mostrar nombre de usuario
+- 🔲 Acceso a Mi Cuenta y Dashboard
+- 🔲 Verificar sesión antes de ir a checkout
+
+### 5.2 Carrito y Checkout 🔲
+**Prioridad: ALTA** | **Estado: PENDIENTE**
+
+#### Tareas:
+- 🔲 Revisar flujo de carrito
+- 🔲 Verificar autenticación antes de pagar
+- 🔲 Crear página de checkout
+- 🔲 Procesar pago y generar orden
+- 🔲 Confirmación de compra
+
+### 5.3 Mi Cuenta 🔲
+**Prioridad: MEDIA** | **Estado: PENDIENTE**
+
+#### Tareas:
+- 🔲 Vista de perfil
+- 🔲 Editar información personal
+- 🔲 Cambiar contraseña
+- 🔲 Preferencias de usuario
+
+### 5.4 Registro de Usuarios 🔲
+**Prioridad: MEDIA** | **Estado: PARCIAL**
+
+#### Estado actual:
+- ⚠️ Formulario existe pero necesita integración con sistema de sesión
+
+#### Tareas:
+- 🔲 Validación completa de formulario
+- 🔲egurar que crea sesión automáticamente
+- 🔲 Verificar duplicados de email
+- 🔲 Asignar rol 'buyer' por defecto
+
+---
+
+## 📊 PROGRESO GENERAL
+
+| Fase | Descripción | Progreso | Estado |
+|------|-------------|----------|--------|
+| 1 | Sistema de Autenticación | 100% | ✅ Completado |
+| 2 | Paneles Admin/Buyer | 100% | ✅ Completado |
+| 3 | Auth Guard & Middleware | 100% | ✅ Completado |
+| 4 | Datos de Prueba | 100% | ✅ Completado |
+| 5 | Mejoras y Refinamiento | 60% | 🟡 En Progreso |
+
+**PROGRESO TOTAL: 85%**
+
+---
+
+## 🎯 PRÓXIMOS PASOS (PRIORIDAD)
+
+1. **URGENTE**: Arreglar headers/navigation en categorías
+   - Mostrar sesión activa
+   - Botones de usuario logueado
+   - Verificar sesión en checkout
+
+2. **ALTA**: Completar flujo de carrito y checkout
+   - Autenticación requerida
+   - Proceso de pago
+   - Generación de órdenes
+
+3. **MEDIA**: Página Mi Cuenta
+   - Editar perfil
+   - Cambiar contraseña
+
+4. **MEDIA**: Mejorar registro
+   - Integración completa con sesión
+
+---
+
+## 📝 NOTAS TÉCNICAS
+
+### LocalStorage Keys:
+```javascript
+- session          // Sesión actual del usuario
+- users            // Array de usuarios
+- products         // Array de productos
+- orders           // Array de órdenes
+- cart             // Carrito actual
+- dataVersion      // Versión de datos
+- loginAttempts    // Intentos de login fallidos
+- lockoutTime      // Tiempo de bloqueo
+```
+
+### Rutas Principales:
+```
+/index.html                              // Landing page
+/pages/public/auth/login.html           // Login
+/pages/public/auth/forgot-password.html // Recuperar contraseña
+/pages/registro/registro.html           // Registro
+/pages/admin/dashboard/dashboard.html   // Dashboard admin
+/pages/buyer/dashboard/dashboard.html   // Dashboard buyer
+/pages/buyer/mis-compras/               // Historial compras
+/pages/admin/productos/                 // Gestión productos
+/pages/admin/ventas/                    // Gestión ventas
+/pages/admin/usuarios/                  // Gestión usuarios
+```
+
+---
+
+**Última actualización:** 6 de noviembre de 2025
+**Versión:** 2.0### 1.2 Auth Guard / Middleware ✅
 **Prioridad: ALTA** | **Estimado: 1 hora** | **Estado: COMPLETADO**
 
 #### Archivo creado:
