@@ -1,5 +1,5 @@
 // Auth guard
-requireAuth(['buyer']);
+const userSession = requireAuth(['buyer']);
 
 // DOM Elements
 const searchInput = document.getElementById('search-input');
@@ -17,11 +17,15 @@ let currentUser = null;
 
 // Initialize
 function init() {
-    currentUser = JSON.parse(localStorage.getItem('currentUser'));
-    if (!currentUser) {
-        window.location.href = '../../public/auth/login.html';
+    // Obtener usuario de la sesión
+    const session = getCurrentUser();
+    if (!session) {
+        console.error('No se pudo obtener la sesión del usuario');
         return;
     }
+    
+    currentUser = session;
+    console.log('✅ Usuario actual:', currentUser);
 
     loadOrders();
     updateCartCount();
@@ -243,6 +247,7 @@ function updateCartCount() {
 // Logout
 function logout() {
     if (confirm('¿Estás seguro de que deseas cerrar sesión?')) {
+        localStorage.removeItem('session');
         localStorage.removeItem('currentUser');
         window.location.href = '../../../index.html';
     }

@@ -30,7 +30,8 @@ function initializeDashboard() {
 function loadUserInfo() {
     const session = getCurrentUser();
     if (session) {
-        document.getElementById('user-name').textContent = session.fullName || session.username;
+        const displayName = session.name || session.fullName || session.username || session.email;
+        document.getElementById('user-name').textContent = displayName;
     }
 }
 

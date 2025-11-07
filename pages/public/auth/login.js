@@ -199,7 +199,8 @@ function handleSuccessfulLogin(user, rememberMe) {
         userId: user.id,
         username: user.username,
         email: user.email,
-        fullName: user.fullName,
+        name: user.name || user.fullName,
+        fullName: user.fullName || user.name,
         role: user.role,
         token: token,
         loginTime: new Date().getTime(),
@@ -210,7 +211,7 @@ function handleSuccessfulLogin(user, rememberMe) {
     localStorage.setItem('session', JSON.stringify(sessionData));
     
     // Show success message
-    showSuccess(`¡Bienvenido, ${user.fullName}!`);
+    showSuccess(`¡Bienvenido, ${user.name || user.fullName}!`);
     
     // Redirect after a short delay
     setTimeout(() => {
