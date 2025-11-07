@@ -134,9 +134,23 @@ function logout() {
         // Mostrar mensaje de éxito
         showNotification('Sesión cerrada correctamente', 'success');
         
+        // Determinar la ruta relativa al index según la ubicación actual
+        const currentPath = window.location.pathname;
+        let indexPath = '../../../index.html'; // Por defecto para páginas en /pages/[tipo]/[página]/
+        
+        if (currentPath.includes('/pages/public/') || 
+            currentPath.includes('/pages/admin/') || 
+            currentPath.includes('/pages/buyer/')) {
+            indexPath = '../../../index.html';
+        } else if (currentPath.includes('/pages/')) {
+            indexPath = '../../index.html';
+        } else {
+            indexPath = './index.html';
+        }
+        
         // Redirigir a home después de un breve delay
         setTimeout(() => {
-            window.location.href = '/index.html';
+            window.location.href = indexPath;
         }, 1000);
     }
 }

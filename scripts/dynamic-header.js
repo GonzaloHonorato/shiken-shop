@@ -168,6 +168,8 @@
             localStorage.removeItem('currentUser');
             
             const paths = getRelativePaths();
+            console.log('Logout - Current path:', window.location.pathname);
+            console.log('Logout - Index path:', paths.index);
             window.location.href = paths.index;
         }
     }
