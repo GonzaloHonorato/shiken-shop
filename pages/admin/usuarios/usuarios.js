@@ -21,6 +21,9 @@ function loadUsers() {
     const savedUsers = localStorage.getItem('users');
     if (savedUsers) {
         users = JSON.parse(savedUsers);
+        console.log('✅ Usuarios cargados:', users);
+    } else {
+        console.warn('⚠️ No se encontraron usuarios en localStorage');
     }
     updateStats();
     renderUsers();
@@ -48,15 +51,26 @@ function renderUsers() {
     const searchTerm = searchInput.value.toLowerCase();
     const roleValue = roleFilter.value;
 
+    console.log('🔍 Renderizando usuarios. Total:', users.length);
+
     let filtered = users.filter(user => {
-        const matchesSearch = user.name.toLowerCase().includes(searchTerm) ||
-                            user.email.toLowerCase().includes(searchTerm);
+        // Asegurar que user.name existe
+        const userName = user.name || user.fullName || user.username || '';
+        const userEmail = user.email || '';
+        
+        const matchesSearch = userName.toLowerCase().includes(searchTerm) ||
+                            userEmail.toLowerCase().includes(searchTerm);
         const matchesRole = !roleValue || user.role === roleValue;
         
         return matchesSearch && matchesRole;
     });
 
+    console.log('📊 Usuarios filtrados:', filtered.length);
+
     usersTableBody.innerHTML = filtered.map(user => {
+        // Nombre del usuario (con fallbacks)
+        const displayName = user.name || user.fullName || user.username || 'Usuario';
+        
         const roleBadge = user.role === 'admin'
             ? `<span class="badge badge-admin">Administrador</span>`
             : `<span class="badge badge-buyer">Comprador</span>`;
@@ -70,9 +84,9 @@ function renderUsers() {
                 <td class="px-6 py-4">
                     <div class="flex items-center">
                         <div class="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold mr-3">
-                            ${user.name.charAt(0).toUpperCase()}
+                            ${displayName.charAt(0).toUpperCase()}
                         </div>
-                        <div class="text-white font-medium">${user.name}</div>
+                        <div class="text-white font-medium">${displayName}</div>
                     </div>
                 </td>
                 <td class="px-6 py-4 text-gray-300">${user.email}</td>
@@ -111,6 +125,9 @@ function viewUser(email) {
 
     currentViewingUser = user;
 
+    // Nombre del usuario (con fallbacks)
+    const displayName = user.name || user.fullName || user.username || 'Usuario';
+
     // Get user's purchase history
     const orders = JSON.parse(localStorage.getItem('orders') || '[]');
     const userOrders = orders.filter(order => order.userId === user.email);
@@ -129,10 +146,10 @@ function viewUser(email) {
             <div class="col-span-2">
                 <div class="flex items-center space-x-4 mb-4">
                     <div class="w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold text-2xl">
-                        ${user.name.charAt(0).toUpperCase()}
+                        ${displayName.charAt(0).toUpperCase()}
                     </div>
                     <div>
-                        <h3 class="text-2xl font-bold text-white">${user.name}</h3>
+                        <h3 class="text-2xl font-bold text-white">${displayName}</h3>
                         <p class="text-gray-400">${user.email}</p>
                     </div>
                 </div>
