@@ -13,64 +13,39 @@ const INIT_CONFIG = {
 // ===================================
 const DEFAULT_USERS = [
     {
-        id: 1,
-        username: 'admin',
+        name: 'Administrador Principal',
         email: 'admin@shikenshop.com',
         password: 'Admin123', // En producción debe estar hasheada
         role: 'admin',
-        fullName: 'Administrador Principal',
-        birthdate: '1990-01-01',
-        address: 'Av. Principal 123, Santiago, Chile',
-        phone: '+56 9 1234 5678',
-        avatar: 'https://ui-avatars.com/api/?name=Admin&background=9333ea&color=fff',
-        createdAt: new Date('2024-01-01').toISOString(),
-        updatedAt: new Date().toISOString(),
-        active: true,
-        preferences: {
-            newsletter: true,
-            notifications: true,
-            favoriteCategories: ['accion', 'rpg', 'estrategia', 'aventura']
-        }
+        registeredAt: new Date('2024-01-01').toISOString()
     },
     {
-        id: 2,
-        username: 'comprador1',
+        name: 'Juan Pérez',
         email: 'comprador@test.com',
         password: 'Comprador123',
         role: 'buyer',
-        fullName: 'Juan Pérez',
-        birthdate: '1995-05-15',
-        address: 'Calle Secundaria 456, Valparaíso, Chile',
-        phone: '+56 9 8765 4321',
-        avatar: 'https://ui-avatars.com/api/?name=Juan+Perez&background=ec4899&color=fff',
-        createdAt: new Date('2024-06-15').toISOString(),
-        updatedAt: new Date().toISOString(),
-        active: true,
-        preferences: {
-            newsletter: true,
-            notifications: true,
-            favoriteCategories: ['accion', 'aventura']
-        }
+        registeredAt: new Date('2024-06-15').toISOString()
     },
     {
-        id: 3,
-        username: 'maria.gomez',
+        name: 'María Gómez',
         email: 'maria.gomez@test.com',
         password: 'Maria123',
         role: 'buyer',
-        fullName: 'María Gómez',
-        birthdate: '1998-08-22',
-        address: 'Av. Los Leones 789, Santiago, Chile',
-        phone: '+56 9 5555 1234',
-        avatar: 'https://ui-avatars.com/api/?name=Maria+Gomez&background=10b981&color=fff',
-        createdAt: new Date('2024-09-10').toISOString(),
-        updatedAt: new Date().toISOString(),
-        active: true,
-        preferences: {
-            newsletter: false,
-            notifications: true,
-            favoriteCategories: ['rpg', 'estrategia']
-        }
+        registeredAt: new Date('2024-09-10').toISOString()
+    },
+    {
+        name: 'Carlos Rodríguez',
+        email: 'carlos.rodriguez@test.com',
+        password: 'Carlos123',
+        role: 'buyer',
+        registeredAt: new Date('2024-08-20').toISOString()
+    },
+    {
+        name: 'Ana Silva',
+        email: 'ana.silva@test.com',
+        password: 'Ana123',
+        role: 'buyer',
+        registeredAt: new Date('2024-10-05').toISOString()
     }
 ];
 
@@ -341,77 +316,185 @@ const DEFAULT_PRODUCTS = [
 // ===================================
 const DEFAULT_ORDERS = [
     {
-        id: 'ORD-001234',
-        userId: 2,
-        userName: 'Juan Pérez',
-        userEmail: 'comprador@test.com',
+        id: 'order_1730800200000',
+        userId: 'comprador@test.com',
+        date: new Date('2024-10-15T14:30:00').toISOString(),
         items: [
             {
-                productId: 'accion-1',
+                id: 'accion-1',
                 name: 'Cyberpunk Fury',
-                price: 44990,
+                price: 44.99,
                 quantity: 1,
                 image: 'https://images.unsplash.com/photo-1538481199705-c710c4e965fc?w=400'
             },
             {
-                productId: 'rpg-3',
+                id: 'rpg-3',
                 name: 'Kingdom Hearts Destiny',
-                price: 39990,
+                price: 39.99,
                 quantity: 1,
                 image: 'https://images.unsplash.com/photo-1493711662062-fa541adb3fc8?w=400'
             }
         ],
-        subtotal: 84980,
-        discount: 0,
-        total: 84980,
-        shippingAddress: 'Calle Secundaria 456, Valparaíso, Chile',
-        status: 'completed',
-        paymentMethod: 'credit_card',
-        createdAt: new Date('2024-10-15T14:30:00').toISOString()
+        total: 84.98,
+        status: 'completed'
     },
     {
-        id: 'ORD-001235',
-        userId: 3,
-        userName: 'María Gómez',
-        userEmail: 'maria.gomez@test.com',
+        id: 'order_1731991200000',
+        userId: 'maria.gomez@test.com',
+        date: new Date('2024-10-28T10:15:00').toISOString(),
         items: [
             {
-                productId: 'estrategia-1',
+                id: 'estrategia-1',
                 name: 'Civilization Empire',
-                price: 47990,
+                price: 47.99,
                 quantity: 1,
                 image: 'https://images.unsplash.com/photo-1611996575749-79a3a250f948?w=400'
             }
         ],
-        subtotal: 47990,
-        discount: 0,
-        total: 47990,
-        shippingAddress: 'Av. Los Leones 789, Santiago, Chile',
-        status: 'completed',
-        paymentMethod: 'debit_card',
-        createdAt: new Date('2024-10-28T10:15:00').toISOString()
+        total: 47.99,
+        status: 'completed'
     },
     {
-        id: 'ORD-001236',
-        userId: 2,
-        userName: 'Juan Pérez',
-        userEmail: 'comprador@test.com',
+        id: 'order_1732392000000',
+        userId: 'comprador@test.com',
+        date: new Date('2024-11-02T16:45:00').toISOString(),
         items: [
             {
-                productId: 'aventura-2',
+                id: 'aventura-2',
                 name: 'Uncharted Odyssey',
-                price: 45990,
+                price: 45.99,
                 quantity: 2,
                 image: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=400'
             }
         ],
-        subtotal: 91980,
-        discount: 0,
-        total: 91980,
-        shippingAddress: 'Calle Secundaria 456, Valparaíso, Chile',
-        status: 'completed',
-        paymentMethod: 'credit_card',
-        createdAt: new Date('2024-11-02T16:45:00').toISOString()
+        total: 91.98,
+        status: 'completed'
+    },
+    {
+        id: 'order_1732810800000',
+        userId: 'comprador@test.com',
+        date: new Date('2024-11-05T09:20:00').toISOString(),
+        items: [
+            {
+                id: 'accion-2',
+                name: 'Battlefield Revolution',
+                price: 39.99,
+                quantity: 1,
+                image: 'https://images.unsplash.com/photo-1552820728-8b83bb6b773f?w=400'
+            }
+        ],
+        total: 39.99,
+        status: 'pending'
+    },
+    {
+        id: 'order_1732897200000',
+        userId: 'maria.gomez@test.com',
+        date: new Date('2024-11-06T12:00:00').toISOString(),
+        items: [
+            {
+                id: 'rpg-1',
+                name: 'Dragon Quest Legends',
+                price: 52.99,
+                quantity: 1,
+                image: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=400'
+            },
+            {
+                id: 'aventura-1',
+                name: 'The Last Explorer',
+                price: 41.99,
+                quantity: 1,
+                image: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=400'
+            }
+        ],
+        total: 94.98,
+        status: 'pending'
+    },
+    {
+        id: 'order_1731204000000',
+        userId: 'carlos.rodriguez@test.com',
+        date: new Date('2024-10-20T15:30:00').toISOString(),
+        items: [
+            {
+                id: 'estrategia-2',
+                name: 'Total War Commander',
+                price: 44.99,
+                quantity: 1,
+                image: 'https://images.unsplash.com/photo-1560253023-3ec5d502959f?w=400'
+            }
+        ],
+        total: 44.99,
+        status: 'completed'
+    },
+    {
+        id: 'order_1731636000000',
+        userId: 'ana.silva@test.com',
+        date: new Date('2024-10-25T11:00:00').toISOString(),
+        items: [
+            {
+                id: 'rpg-2',
+                name: 'Final Fantasy Rebirth',
+                price: 49.99,
+                quantity: 1,
+                image: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=400'
+            },
+            {
+                id: 'aventura-3',
+                name: 'Tomb Raider Infinity',
+                price: 39.99,
+                quantity: 1,
+                image: 'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=400'
+            }
+        ],
+        total: 89.98,
+        status: 'completed'
+    },
+    {
+        id: 'order_1732500000000',
+        userId: 'carlos.rodriguez@test.com',
+        date: new Date('2024-11-03T14:20:00').toISOString(),
+        items: [
+            {
+                id: 'accion-3',
+                name: 'Call of Honor',
+                price: 42.99,
+                quantity: 2,
+                image: 'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=400'
+            }
+        ],
+        total: 85.98,
+        status: 'pending'
+    },
+    {
+        id: 'order_1732156800000',
+        userId: 'ana.silva@test.com',
+        date: new Date('2024-10-30T16:45:00').toISOString(),
+        items: [
+            {
+                id: 'estrategia-3',
+                name: 'Age of Empires Legends',
+                price: 46.99,
+                quantity: 1,
+                image: 'https://images.unsplash.com/photo-1560419015-7c427e8ae5ba?w=400'
+            }
+        ],
+        total: 46.99,
+        status: 'completed'
+    },
+    {
+        id: 'order_1731420000000',
+        userId: 'comprador@test.com',
+        date: new Date('2024-10-22T13:15:00').toISOString(),
+        items: [
+            {
+                id: 'aventura-4',
+                name: 'Zelda: Tears of Adventure',
+                price: 54.99,
+                quantity: 1,
+                image: 'https://images.unsplash.com/photo-1526509867162-5b0c0d1b5ec8?w=400'
+            }
+        ],
+        total: 54.99,
+        status: 'cancelled'
     }
 ];
 
