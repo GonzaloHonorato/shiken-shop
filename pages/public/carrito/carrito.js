@@ -254,12 +254,12 @@ function processCheckout() {
         return;
     }
     
-    // Verificar si el usuario está registrado
-    const isLoggedIn = localStorage.getItem('isLoggedIn');
+    // Verificar si el usuario está logueado usando auth-guard
+    const session = getCurrentUser();
     
-    if (!isLoggedIn) {
-        if (confirm('Debes registrarte para completar la compra. ¿Deseas ir a la página de registro?')) {
-            window.location.href = '../registro/registro.html';
+    if (!session) {
+        if (confirm('Debes iniciar sesión para completar la compra. ¿Deseas ir a la página de login?')) {
+            window.location.href = '../auth/login.html';
         }
         return;
     }
