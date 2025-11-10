@@ -17,6 +17,7 @@ const DEFAULT_USERS = [
         email: 'admin@shikenshop.com',
         password: 'Admin123', // En producción debe estar hasheada
         role: 'admin',
+        active: true,
         registeredAt: new Date('2024-01-01').toISOString()
     },
     {
@@ -24,6 +25,7 @@ const DEFAULT_USERS = [
         email: 'comprador@test.com',
         password: 'Comprador123',
         role: 'buyer',
+        active: true,
         registeredAt: new Date('2024-06-15').toISOString()
     },
     {
@@ -31,6 +33,7 @@ const DEFAULT_USERS = [
         email: 'maria.gomez@test.com',
         password: 'Maria123',
         role: 'buyer',
+        active: true,
         registeredAt: new Date('2024-09-10').toISOString()
     },
     {
@@ -38,6 +41,7 @@ const DEFAULT_USERS = [
         email: 'carlos.rodriguez@test.com',
         password: 'Carlos123',
         role: 'buyer',
+        active: true,
         registeredAt: new Date('2024-08-20').toISOString()
     },
     {
@@ -45,6 +49,7 @@ const DEFAULT_USERS = [
         email: 'ana.silva@test.com',
         password: 'Ana123',
         role: 'buyer',
+        active: true,
         registeredAt: new Date('2024-10-05').toISOString()
     }
 ];

@@ -134,9 +134,10 @@
                 linksContainer.appendChild(userMenu);
             }
 
-            // Event listener para logout
+            // Event listener para logout (prevenir duplicados)
             const logoutBtn = document.getElementById('logout-btn-header');
-            if (logoutBtn) {
+            if (logoutBtn && !logoutBtn.hasAttribute('data-listener-added')) {
+                logoutBtn.setAttribute('data-listener-added', 'true');
                 logoutBtn.addEventListener('click', handleLogout);
             }
         } else {
@@ -162,7 +163,20 @@
     }
 
     // Manejar logout
-    function handleLogout() {
+    function handleLogout(e) {
+        // Prevenir ejecuciones múltiples
+        if (e) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+        }
+        
+        // Verificar si ya se está procesando un logout
+        if (window.logoutInProgress) {
+            return;
+        }
+        
+        window.logoutInProgress = true;
+        
         if (confirm('¿Estás seguro de que deseas cerrar sesión?')) {
             localStorage.removeItem('session');
             localStorage.removeItem('currentUser');
@@ -171,6 +185,9 @@
             console.log('Logout - Current path:', window.location.pathname);
             console.log('Logout - Index path:', paths.index);
             window.location.href = paths.index;
+        } else {
+            // Si el usuario cancela, resetear el flag
+            window.logoutInProgress = false;
         }
     }
 

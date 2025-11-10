@@ -171,13 +171,23 @@ async function handleLogin(e) {
 function authenticateUser(identifier, password) {
     const users = JSON.parse(localStorage.getItem('users')) || [];
     
-    // Find user by email or username
-    const user = users.find(u => 
-        (u.email.toLowerCase() === identifier.toLowerCase() || 
-         u.username.toLowerCase() === identifier.toLowerCase()) &&
-        u.password === password &&
-        u.active === true
-    );
+    // Find user by email or username (with null checks)
+    const user = users.find(u => {
+        // Verificar que u.email existe
+        if (!u.email) return false;
+        
+        // Verificar por email
+        if (u.email.toLowerCase() === identifier.toLowerCase()) {
+            return u.password === password && (u.active !== false); // active por defecto es true
+        }
+        
+        // Verificar por username solo si existe
+        if (u.username && u.username.toLowerCase() === identifier.toLowerCase()) {
+            return u.password === password && (u.active !== false);
+        }
+        
+        return false;
+    });
     
     return user || null;
 }
