@@ -324,8 +324,8 @@ function closeCheckoutModal() {
     // Restaurar scroll
     document.body.style.overflow = 'auto';
     
-    // Redirigir al inicio
-    window.location.href = '../../index.html';
+    // Redirigir al inicio (home)
+    window.location.href = '../../../index.html';
 }
 
 // ============= NOTIFICACIONES =============
