@@ -107,13 +107,13 @@ export const routes: Routes = [
         path: 'dashboard', 
         loadComponent: () => import('./pages/admin-dashboard/admin-dashboard.component').then(m => m.AdminDashboardComponent),
         title: 'Dashboard Administrativo - ShikenShop'
-      }
+      },
+      { 
+        path: 'productos', 
+        loadComponent: () => import('./pages/admin-products/admin-products.component').then(m => m.AdminProductsComponent),
+        title: 'Gestión de Productos - ShikenShop'
+      },
       // TODO: Descomentar cuando se creen los componentes
-      // { 
-      //   path: 'productos', 
-      //   loadComponent: () => import('./pages/admin-products/admin-products.component').then(m => m.AdminProductsComponent),
-      //   title: 'Gestión de Productos - ShikenShop'
-      // },
       // { 
       //   path: 'usuarios', 
       //   loadComponent: () => import('./pages/admin-users/admin-users.component').then(m => m.AdminUsersComponent),

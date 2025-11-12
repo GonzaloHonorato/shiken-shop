@@ -183,9 +183,13 @@ export class AdminDashboardComponent implements OnInit {
 
   navigateToSection(route: string): void {
     if (route.startsWith('/admin/')) {
-      // TODO: Uncomment when admin routes are implemented
-      // this.router.navigate([route]);
-      this.notificationService.info(`Próximamente: ${route}`);
+      // Check which route is available
+      if (route === '/admin/productos') {
+        this.router.navigate([route]);
+      } else {
+        // TODO: Uncomment when other admin routes are implemented
+        this.notificationService.info(`Próximamente: ${route}`);
+      }
     }
   }
 

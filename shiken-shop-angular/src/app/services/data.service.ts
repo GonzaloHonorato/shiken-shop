@@ -853,4 +853,73 @@ export class DataService {
     const item = this.cart().find(item => item.id === productId);
     return item ? item.quantity : 0;
   }
+
+  // ===================================
+  // PRODUCT CRUD METHODS
+  // ===================================
+
+  /**
+   * Crea un nuevo producto
+   */
+  public createProduct(productData: Omit<Product, 'id'>): Product {
+    const newProduct: Product = {
+      ...productData,
+      id: 'product_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9)
+    };
+
+    const currentProducts = this.products();
+    const updatedProducts = [...currentProducts, newProduct];
+    
+    this.saveProducts(updatedProducts);
+    console.log('✅ Producto creado:', newProduct.name);
+    
+    return newProduct;
+  }
+
+  /**
+   * Actualiza un producto existente
+   */
+  public updateProduct(productId: string, updatedData: Partial<Product>): Product | null {
+    const currentProducts = this.products();
+    const productIndex = currentProducts.findIndex(p => p.id === productId);
+    
+    if (productIndex === -1) {
+      console.error('❌ Producto no encontrado:', productId);
+      return null;
+    }
+
+    const updatedProduct: Product = {
+      ...currentProducts[productIndex],
+      ...updatedData,
+      id: productId // Ensure ID doesn't change
+    };
+
+    const updatedProducts = [...currentProducts];
+    updatedProducts[productIndex] = updatedProduct;
+    
+    this.saveProducts(updatedProducts);
+    console.log('✅ Producto actualizado:', updatedProduct.name);
+    
+    return updatedProduct;
+  }
+
+  /**
+   * Elimina un producto
+   */
+  public deleteProduct(productId: string): boolean {
+    const currentProducts = this.products();
+    const filteredProducts = currentProducts.filter(p => p.id !== productId);
+    
+    if (filteredProducts.length === currentProducts.length) {
+      console.error('❌ Producto no encontrado para eliminar:', productId);
+      return false;
+    }
+
+    this.saveProducts(filteredProducts);
+    console.log('✅ Producto eliminado:', productId);
+    
+    return true;
+  }
+
+
 }
