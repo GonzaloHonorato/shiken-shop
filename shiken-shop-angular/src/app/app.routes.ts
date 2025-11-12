@@ -93,40 +93,39 @@ export const routes: Routes = [
   //   title: 'Mi Cuenta - ShikenShop'
   // },
 
-  // FASE 4: Panel de Administrador - Solo admins
-  // {
-  //   path: 'admin',
-  //   canActivate: [AdminGuard],
-  //   children: [
-  //     { 
-  //       path: '', 
-  //       redirectTo: 'dashboard', 
-  //       pathMatch: 'full' 
-  //     },
-  //     { 
-  //       path: 'dashboard', 
-  //       loadComponent: () => import('./pages/admin-dashboard/admin-dashboard.component').then(m => m.AdminDashboardComponent),
-  //       title: 'Dashboard Administrativo - ShikenShop'
-  //     },
-  //     { 
-  //       path: 'productos', 
-  //       loadComponent: () => import('./pages/admin-products/admin-products.component').then(m => m.AdminProductsComponent),
-  //       title: 'Gestión de Productos - ShikenShop'
-  //     },
-  //     { 
-  //       path: 'usuarios', 
-  //       loadComponent: () => import('./pages/admin-users/admin-users.component').then(m => m.AdminUsersComponent),
-  //       title: 'Gestión de Usuarios - ShikenShop'
-  //     },
-  //     { 
-  //       path: 'ventas', 
-  //       loadComponent: () => import('./pages/admin-sales/admin-sales.component').then(m => m.AdminSalesComponent),
-  //       title: 'Gestión de Ventas - ShikenShop'
-  //     }
-  //   ]
-  // },
-
-  // FASE 5: Mi Cuenta - Usuarios autenticados
+  // FASE 3: Panel Administrativo - Solo admins
+  {
+    path: 'admin',
+    canActivate: [AdminGuard],
+    children: [
+      { 
+        path: '', 
+        redirectTo: 'dashboard', 
+        pathMatch: 'full' 
+      },
+      { 
+        path: 'dashboard', 
+        loadComponent: () => import('./pages/admin-dashboard/admin-dashboard.component').then(m => m.AdminDashboardComponent),
+        title: 'Dashboard Administrativo - ShikenShop'
+      }
+      // TODO: Descomentar cuando se creen los componentes
+      // { 
+      //   path: 'productos', 
+      //   loadComponent: () => import('./pages/admin-products/admin-products.component').then(m => m.AdminProductsComponent),
+      //   title: 'Gestión de Productos - ShikenShop'
+      // },
+      // { 
+      //   path: 'usuarios', 
+      //   loadComponent: () => import('./pages/admin-users/admin-users.component').then(m => m.AdminUsersComponent),
+      //   title: 'Gestión de Usuarios - ShikenShop'
+      // },
+      // { 
+      //   path: 'ventas', 
+      //   loadComponent: () => import('./pages/admin-sales/admin-sales.component').then(m => m.AdminSalesComponent),
+      //   title: 'Gestión de Ventas - ShikenShop'
+      // }
+    ]
+  },  // FASE 5: Mi Cuenta - Usuarios autenticados
   {
     path: 'mi-cuenta',
     canActivate: [AuthGuard],
