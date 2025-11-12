@@ -107,6 +107,8 @@ export class AdminDashboardComponent implements OnInit {
       return;
     }
 
+    // Ensure data is initialized first
+    this.dataService.initializeData();
     this.loadDashboardData();
   }
 
@@ -122,26 +124,44 @@ export class AdminDashboardComponent implements OnInit {
       const users = this.dataService.users();
       const orders = this.dataService.orders();
 
+      console.log('📦 Productos cargados:', products.length, products);
+      console.log('👥 Usuarios cargados:', users.length, users);
+      console.log('🛒 Órdenes cargadas:', orders.length, orders);
+
       // Calculate statistics
       const activeProducts = products.filter(p => p.active).length;
-      const activeUsers = users.filter(u => u.active && u.role === 'buyer').length;
+      const totalUsers = users.length;
+      const buyerUsers = users.filter(u => u.role === 'buyer').length;
+      const adminUsers = users.filter(u => u.role === 'admin').length;
+      const totalOrders = orders.length;
       const totalRevenue = orders.reduce((sum, order) => sum + (order.total || 0), 0);
       const recentOrders = orders
-        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+        .sort((a, b) => new Date(b.createdAt || b.date).getTime() - new Date(a.createdAt || a.date).getTime())
         .slice(0, 5);
 
       // Update stats
-      this.stats.set({
+      const statsData = {
         totalProducts: products.length,
-        totalUsers: users.length,
-        totalOrders: orders.length,
+        totalUsers,
+        totalOrders,
         totalRevenue,
         activeProducts,
-        activeUsers,
-        recentOrders
-      });
+        activeUsers: buyerUsers, // Changed to show buyer users specifically
+        recentOrders,
+        // Additional helpful stats
+        adminUsers,
+        buyerUsers
+      };
 
-      console.log('📊 Estadísticas del dashboard cargadas:', this.stats());
+      this.stats.set(statsData);
+
+      console.log('📊 Estadísticas calculadas:', {
+        productos: `${products.length} total, ${activeProducts} activos`,
+        usuarios: `${totalUsers} total, ${buyerUsers} compradores, ${adminUsers} admins`,
+        ordenes: `${totalOrders} total`,
+        ingresos: `$${totalRevenue}`,
+        ordenesRecientes: recentOrders.length
+      });
       
     } catch (error) {
       console.error('❌ Error cargando datos del dashboard:', error);
@@ -184,7 +204,7 @@ export class AdminDashboardComponent implements OnInit {
   navigateToSection(route: string): void {
     if (route.startsWith('/admin/')) {
       // Check which route is available
-      if (route === '/admin/productos') {
+      if (route === '/admin/productos' || route === '/admin/usuarios') {
         this.router.navigate([route]);
       } else {
         // TODO: Uncomment when other admin routes are implemented
