@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { Subject, takeUntil, fromEvent } from 'rxjs';
 import { AuthService } from '../../../services/auth.service';
+import { DataService } from '../../../services/data.service';
 import { NotificationService } from '../../../services/notification.service';
 
 @Component({
@@ -70,7 +71,7 @@ import { NotificationService } from '../../../services/notification.service';
               <div class="flex space-x-4 items-center">
                 
                 <!-- Carrito -->
-                <a routerLink="/carrito" class="text-white hover:text-purple-400 transition-colors duration-300 relative">
+                <a routerLink="/cart" class="text-white hover:text-purple-400 transition-colors duration-300 relative">
                   <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
                   </svg>
@@ -153,7 +154,7 @@ import { NotificationService } from '../../../services/notification.service';
                   Registrarse
                 </a>
               } @else {
-                <a routerLink="/carrito" (click)="closeMobileMenu()" class="text-white hover:text-purple-400 transition-colors duration-300 py-2 flex items-center">
+                <a routerLink="/cart" (click)="closeMobileMenu()" class="text-white hover:text-purple-400 transition-colors duration-300 py-2 flex items-center">
                   🛒 Carrito
                   @if (cartCount() > 0) {
                     <span class="ml-2 bg-pink-600 text-white text-xs rounded-full px-2 py-1">
@@ -211,14 +212,14 @@ import { NotificationService } from '../../../services/notification.service';
 export class HeaderComponent implements OnInit, OnDestroy {
   private router = inject(Router);
   private authService = inject(AuthService);
+  private dataService = inject(DataService);
   private notificationService = inject(NotificationService);
   private destroy$ = new Subject<void>();
 
   // Signals para el estado del componente
   private mobileMenuOpen = signal(false);
-  private cartItems = signal<any[]>([]);
 
-  // Usar los signals del AuthService directamente para reactividad completa
+  // Usar los signals del AuthService y DataService directamente para reactividad completa
   isAuthenticated = computed(() => this.authService.isAuthenticated());
   currentUser = computed(() => this.authService.currentUser());
   userName = computed(() => {
@@ -226,9 +227,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
     return user?.name || user?.email?.split('@')[0] || 'Usuario';
   });
   userInitial = computed(() => this.userName().charAt(0).toUpperCase());
-  cartCount = computed(() => 
-    this.cartItems().reduce((sum: number, item: any) => sum + (item.quantity || 0), 0)
-  );
+  cartCount = computed(() => this.dataService.cartCount());
   dashboardRoute = computed(() => {
     const user = this.currentUser();
     return user?.role === 'admin' ? '/admin/dashboard' : '/buyer/dashboard';
@@ -237,8 +236,6 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     console.log('🚀 [HEADER] Inicializando header...');
-    this.loadCartData();
-    this.setupStorageListener();
     
     // Log inicial del estado de autenticación
     console.log('🔐 [HEADER] Estado inicial de autenticación:', {
@@ -273,34 +270,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  private loadCartData() {
-    const cart = localStorage.getItem('cart');
-    if (cart) {
-      try {
-        this.cartItems.set(JSON.parse(cart));
-      } catch (error) {
-        console.error('Error parsing cart:', error);
-        this.cartItems.set([]);
-      }
-    }
-  }
-
-  private setupStorageListener() {
-    // Escuchar cambios en localStorage para el carrito
-    fromEvent(window, 'storage')
-      .pipe(takeUntil(this.destroy$))
-      .subscribe((event: any) => {
-        if (event.key === 'cart') {
-          console.log('🛒 [HEADER] Carrito actualizado desde localStorage');
-          this.loadCartData();
-        }
-      });
-
-    // Actualizar carrito periódicamente
-    setInterval(() => {
-      this.loadCartData();
-    }, 60000); // Cada minuto
-  }
+  // Cart data is now handled by DataService
 
   toggleMobileMenu() {
     this.mobileMenuOpen.set(!this.mobileMenuOpen());

@@ -41,33 +41,43 @@ export const routes: Routes = [
 
   // FASE 2: Categorías de juegos - Rutas públicas
   {
-    path: 'accion',
+    path: 'categories/accion',
     loadComponent: () => import('./pages/categories/accion/accion.component').then(m => m.AccionComponent),
     title: 'Juegos de Acción - ShikenShop'
   },
   {
-    path: 'rpg',
+    path: 'categories/rpg',
     loadComponent: () => import('./pages/categories/rpg/rpg.component').then(m => m.RpgComponent),
     title: 'Juegos RPG - ShikenShop'  
   },
   {
-    path: 'estrategia',
+    path: 'categories/estrategia',
     loadComponent: () => import('./pages/categories/estrategia/estrategia.component').then(m => m.EstrategiaComponent),
     title: 'Juegos de Estrategia - ShikenShop'
   },
   {
-    path: 'aventura',
+    path: 'categories/aventura',
     loadComponent: () => import('./pages/categories/aventura/aventura.component').then(m => m.AventuraComponent),
     title: 'Juegos de Aventura - ShikenShop'
   },
 
-  // FASE 3: Carrito de compras (requiere autenticación)
-  // {
-  //   path: 'carrito',
-  //   canActivate: [AuthGuard],
-  //   loadComponent: () => import('./pages/cart/cart.component').then(m => m.CartComponent),
-  //   title: 'Carrito de Compras - ShikenShop'
-  // },
+  // Rutas de compatibilidad para categorías
+  { path: 'accion', redirectTo: '/categories/accion', pathMatch: 'full' },
+  { path: 'rpg', redirectTo: '/categories/rpg', pathMatch: 'full' },
+  { path: 'estrategia', redirectTo: '/categories/estrategia', pathMatch: 'full' },
+  { path: 'aventura', redirectTo: '/categories/aventura', pathMatch: 'full' },
+
+  // FASE 3: Carrito de compras
+  {
+    path: 'cart',
+    loadComponent: () => import('./components/cart/cart.component').then(m => m.CartComponent),
+    title: 'Carrito de Compras - ShikenShop'
+  },
+  {
+    path: 'carrito', // Ruta alternativa para compatibilidad
+    redirectTo: '/cart',
+    pathMatch: 'full'
+  },
   
   // Mi cuenta (accesible para usuarios autenticados de cualquier rol)
   // {

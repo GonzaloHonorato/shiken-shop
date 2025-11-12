@@ -692,4 +692,156 @@ export class DataService {
     localStorage.setItem(StorageKeys.CART, JSON.stringify(cart));
     this.loadCart();
   }
+
+  // ===================================
+  // CART MANAGEMENT METHODS
+  // ===================================
+
+  /**
+   * Agrega un producto al carrito
+   */
+  public addToCart(productId: string, quantity: number = 1): boolean {
+    const product = this.products().find(p => p.id === productId);
+    
+    if (!product) {
+      console.warn('Producto no encontrado:', productId);
+      return false;
+    }
+
+    const currentCart = [...this.cart()];
+    const existingItemIndex = currentCart.findIndex(item => item.id === productId);
+
+    if (existingItemIndex >= 0) {
+      // El producto ya existe en el carrito, actualizar cantidad
+      const existingItem = currentCart[existingItemIndex];
+      const newQuantity = existingItem.quantity + quantity;
+      
+      if (newQuantity <= product.stock) {
+        existingItem.quantity = newQuantity;
+      } else {
+        console.warn('Stock insuficiente para el producto:', product.name);
+        return false;
+      }
+    } else {
+      // Agregar nuevo producto al carrito
+      if (quantity <= product.stock) {
+        const cartItem: CartItem = {
+          id: product.id,
+          name: product.name,
+          price: product.price,
+          originalPrice: product.originalPrice || product.price,
+          discount: product.discount || 0,
+          image: product.image,
+          quantity: quantity,
+          maxStock: product.stock
+        };
+        currentCart.push(cartItem);
+      } else {
+        console.warn('Stock insuficiente para el producto:', product.name);
+        return false;
+      }
+    }
+
+    this.saveCart(currentCart);
+    return true;
+  }
+
+  /**
+   * Actualiza la cantidad de un producto en el carrito
+   */
+  public updateCartItemQuantity(productId: string, quantity: number): boolean {
+    if (quantity < 0) return false;
+
+    const currentCart = [...this.cart()];
+    const itemIndex = currentCart.findIndex(item => item.id === productId);
+
+    if (itemIndex >= 0) {
+      if (quantity === 0) {
+        // Eliminar el producto si la cantidad es 0
+        currentCart.splice(itemIndex, 1);
+      } else if (quantity <= currentCart[itemIndex].maxStock) {
+        // Actualizar la cantidad
+        currentCart[itemIndex].quantity = quantity;
+      } else {
+        console.warn('Stock insuficiente');
+        return false;
+      }
+
+      this.saveCart(currentCart);
+      return true;
+    }
+
+    return false;
+  }
+
+  /**
+   * Elimina un producto del carrito
+   */
+  public removeFromCart(productId: string): boolean {
+    const currentCart = [...this.cart()];
+    const itemIndex = currentCart.findIndex(item => item.id === productId);
+
+    if (itemIndex >= 0) {
+      currentCart.splice(itemIndex, 1);
+      this.saveCart(currentCart);
+      return true;
+    }
+
+    return false;
+  }
+
+  /**
+   * Limpia completamente el carrito
+   */
+  public clearCart(): void {
+    this.saveCart([]);
+  }
+
+  /**
+   * Obtiene el resumen del carrito (totales, cantidades, etc.)
+   */
+  public getCartSummary(): {
+    totalItems: number;
+    subtotal: number;
+    totalDiscount: number;
+    total: number;
+  } {
+    const cartItems = this.cart();
+    let subtotal = 0;
+    let totalDiscount = 0;
+    let totalItems = 0;
+
+    cartItems.forEach(item => {
+      const itemTotal = item.price * item.quantity;
+      subtotal += itemTotal;
+      totalItems += item.quantity;
+
+      if (item.originalPrice && item.originalPrice > item.price) {
+        const discountAmount = (item.originalPrice - item.price) * item.quantity;
+        totalDiscount += discountAmount;
+      }
+    });
+
+    return {
+      totalItems,
+      subtotal,
+      totalDiscount,
+      total: subtotal
+    };
+  }
+
+  /**
+   * Verifica si un producto está en el carrito
+   */
+  public isProductInCart(productId: string): boolean {
+    return this.cart().some(item => item.id === productId);
+  }
+
+  /**
+   * Obtiene la cantidad de un producto específico en el carrito
+   */
+  public getProductQuantityInCart(productId: string): number {
+    const item = this.cart().find(item => item.id === productId);
+    return item ? item.quantity : 0;
+  }
 }
