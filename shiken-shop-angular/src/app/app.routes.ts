@@ -154,7 +154,7 @@ export const routes: Routes = [
       },
       { 
         path: 'mis-compras', 
-        loadComponent: () => import('./pages/buyer-dashboard/buyer-dashboard.component').then(m => m.BuyerDashboardComponent),
+        loadComponent: () => import('./pages/buyer-purchases/buyer-purchases.component').then(m => m.BuyerPurchasesComponent),
         title: 'Mis Compras - ShikenShop'
       }
     ]
