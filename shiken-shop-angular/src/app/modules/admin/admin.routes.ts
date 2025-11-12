@@ -1,6 +1,6 @@
 import { Routes } from '@angular/router';
 import { AdminGuard } from '../../guards';
-import { AdminResolverFn } from './admin.resolver';
+import { AdminResolverFn } from './admin.resolver'; 
 
 export const adminRoutes: Routes = [
   {
