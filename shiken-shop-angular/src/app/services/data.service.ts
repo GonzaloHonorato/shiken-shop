@@ -949,5 +949,34 @@ export class DataService {
     return true;
   }
 
+  // ===================================
+  // ORDER MANAGEMENT METHODS
+  // ===================================
+
+  /**
+   * Actualiza el estado de una orden
+   */
+  public updateOrderStatus(orderNumber: string, newStatus: any): boolean {
+    const currentOrders = this.orders();
+    const orderIndex = currentOrders.findIndex(o => o.orderNumber === orderNumber);
+    
+    if (orderIndex === -1) {
+      console.error('❌ Orden no encontrada:', orderNumber);
+      return false;
+    }
+
+    const updatedOrders = [...currentOrders];
+    updatedOrders[orderIndex] = {
+      ...updatedOrders[orderIndex],
+      status: newStatus,
+      updatedAt: new Date().toISOString()
+    };
+
+    this.saveOrders(updatedOrders);
+    console.log('✅ Estado de orden actualizado:', orderNumber, 'nuevo estado:', newStatus);
+    
+    return true;
+  }
+
 
 }

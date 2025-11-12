@@ -204,7 +204,7 @@ export class AdminDashboardComponent implements OnInit {
   navigateToSection(route: string): void {
     if (route.startsWith('/admin/')) {
       // Check which route is available
-      if (route === '/admin/productos' || route === '/admin/usuarios') {
+      if (route === '/admin/productos' || route === '/admin/usuarios' || route === '/admin/ventas') {
         this.router.navigate([route]);
       } else {
         // TODO: Uncomment when other admin routes are implemented
