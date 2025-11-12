@@ -138,27 +138,27 @@ export const routes: Routes = [
   },
 
   // FASE 4: Panel de Comprador - Solo buyers
-  // {
-  //   path: 'buyer',
-  //   canActivate: [BuyerGuard],
-  //   children: [
-  //     { 
-  //       path: '', 
-  //       redirectTo: 'dashboard', 
-  //       pathMatch: 'full' 
-  //     },
-  //     { 
-  //       path: 'dashboard', 
-  //       loadComponent: () => import('./pages/buyer-dashboard/buyer-dashboard.component').then(m => m.BuyerDashboardComponent),
-  //       title: 'Mi Dashboard - ShikenShop'
-  //     },
-  //     { 
-  //       path: 'mis-compras', 
-  //       loadComponent: () => import('./pages/my-purchases/my-purchases.component').then(m => m.MyPurchasesComponent),
-  //       title: 'Mis Compras - ShikenShop'
-  //     }
-  //   ]
-  // },
+  {
+    path: 'buyer',
+    canActivate: [BuyerGuard],
+    children: [
+      { 
+        path: '', 
+        redirectTo: 'dashboard', 
+        pathMatch: 'full' 
+      },
+      { 
+        path: 'dashboard', 
+        loadComponent: () => import('./pages/buyer-dashboard/buyer-dashboard.component').then(m => m.BuyerDashboardComponent),
+        title: 'Mi Dashboard - ShikenShop'
+      },
+      { 
+        path: 'mis-compras', 
+        loadComponent: () => import('./pages/buyer-dashboard/buyer-dashboard.component').then(m => m.BuyerDashboardComponent),
+        title: 'Mis Compras - ShikenShop'
+      }
+    ]
+  },
 
   // Wildcard route - debe ser la última
   {
