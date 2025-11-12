@@ -26,12 +26,12 @@ export const routes: Routes = [
   // TODO: Las siguientes rutas se activarán cuando creemos los componentes correspondientes
   
   // FASE 2: Autenticación - Rutas públicas (solo para invitados)
-  // {
-  //   path: 'login',
-  //   canActivate: [GuestGuard],
-  //   loadComponent: () => import('./pages/login/login.component').then(m => m.LoginComponent),
-  //   title: 'Iniciar Sesión - ShikenShop'
-  // },
+  {
+    path: 'login',
+    canActivate: [GuestGuard],
+    loadComponent: () => import('./components/auth/login.component').then(m => m.LoginComponent),
+    title: 'Iniciar Sesión - ShikenShop'
+  },
   // {
   //   path: 'register', 
   //   canActivate: [GuestGuard],
