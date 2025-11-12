@@ -152,6 +152,26 @@ button {
   to { opacity: 1; }
 }
 
+@keyframes addedPulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+// ===================================
+// BUTTON STATES
+// ===================================
+
+button.added {
+  background: linear-gradient(135deg, #10b981, #059669) !important;
+  animation: addedPulse 0.3s ease-out;
+  
+  &:disabled {
+    opacity: 1 !important;
+    cursor: default !important;
+  }
+}
+
 // Responsive adjustments
 @media (max-width: 768px) {
   .game-card {

@@ -40,6 +40,9 @@ export class CategoryBaseComponent implements OnInit, OnDestroy {
   private priceFilter = signal<{ min: number; max: number } | null>(null);
   private sortBy = signal<string>('name');
   private showOnlyDiscount = signal<boolean>(false);
+  
+  // Signal para controlar botones "Añadido"
+  private addedProducts = signal<Set<string>>(new Set());
 
   // Computed para productos filtrados
   private categoryProducts = computed(() => 
@@ -158,9 +161,24 @@ export class CategoryBaseComponent implements OnInit, OnDestroy {
 
     console.log('🛒 [CATEGORY] Agregando al carrito:', product.name);
     
+    // Agregar producto al set de "añadidos" para cambiar el botón
+    const currentAdded = this.addedProducts();
+    const newAdded = new Set(currentAdded);
+    newAdded.add(product.id);
+    this.addedProducts.set(newAdded);
+    
     // Usar el método addToCart del DataService
     this.dataService.addToCart(product.id, 1);
-    this.notificationService.success(`${product.name} agregado al carrito`);
+    
+    // Mostrar notificación
+    this.notificationService.success(`${product.name} agregado al carrito 🛒`);
+    
+    // Restaurar el botón después de 2 segundos
+    setTimeout(() => {
+      const updated = new Set(this.addedProducts());
+      updated.delete(product.id);
+      this.addedProducts.set(updated);
+    }, 2000);
   }
 
   formatPrice(price: number): string {
@@ -179,6 +197,10 @@ export class CategoryBaseComponent implements OnInit, OnDestroy {
       'amber-400': '#fbbf24'     // Aventura
     };
     return colorMap[this.config().accentColor] || '#f87171';
+  }
+
+  isProductAdded(productId: string): boolean {
+    return this.addedProducts().has(productId);
   }
 
   getButtonClasses(): string {
