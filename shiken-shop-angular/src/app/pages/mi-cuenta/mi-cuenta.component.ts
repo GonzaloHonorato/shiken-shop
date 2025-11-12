@@ -80,8 +80,9 @@ export class MiCuentaComponent implements OnInit {
    * Carga los datos del usuario actual
    */
   private loadUserData(): void {
-    const user = this.currentUser();
+    const user = this.authService.getCurrentUser();
     if (!user) {
+      this.notificationService.error('Usuario no encontrado');
       this.router.navigate(['/login']);
       return;
     }
@@ -98,21 +99,28 @@ export class MiCuentaComponent implements OnInit {
     // Almacenar datos originales para cancelar
     this.originalUserData = { ...fullUserData };
 
+    console.log('👤 Datos originales del usuario:', fullUserData);
+    console.log('👤 Propiedades disponibles:', Object.keys(fullUserData));
+
+    // Usar name como fullName si fullName no existe
+    const displayName = fullUserData.fullName || fullUserData.name || 'Usuario';
+    const username = fullUserData.username || fullUserData.name || fullUserData.email?.split('@')[0] || '';
+
     // Generar avatar URL
-    const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(fullUserData.fullName || fullUserData.name || 'Usuario')}&background=7c3aed&color=fff&size=200`;
+    const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=7c3aed&color=fff&size=200`;
     this.avatarUrl.set(avatarUrl);
 
-    // Poblar formulario de perfil
+    // Poblar formulario de perfil con valores por defecto
     this.profileForm.patchValue({
-      fullName: fullUserData.fullName || '',
-      username: fullUserData.username || '',
+      fullName: fullUserData.fullName || fullUserData.name || '',
+      username: fullUserData.username || username,
       email: fullUserData.email || '',
       phone: fullUserData.phone || '',
       birthdate: fullUserData.birthdate || '',
       address: fullUserData.address || ''
     });
 
-    console.log('👤 Datos del usuario cargados:', fullUserData);
+    console.log('� Formulario poblado con:', this.profileForm.value);
   }
 
   // ===================================
