@@ -32,7 +32,8 @@ function updateUIBasedOnAuth() {
             if (userMenu) userMenu.classList.remove('hidden');
             if (userName) userName.textContent = sessionData.fullName || sessionData.username;
             updateCartCount();
-            if (logoutBtn) {
+            if (logoutBtn && !logoutBtn.hasAttribute('data-listener-added')) {
+                logoutBtn.setAttribute('data-listener-added', 'true');
                 logoutBtn.addEventListener('click', handleLogout);
             }
         } catch (error) {
@@ -52,14 +53,35 @@ function showGuestMenu() {
 }
 
 function handleLogout(e) {
-    e.preventDefault();
+    if (e) {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+    }
+    
+    // Evitar ejecuciones múltiples
+    if (window.logoutInProgress) {
+        return;
+    }
+    
+    window.logoutInProgress = true;
+    
     const confirmLogout = confirm('¿Estás seguro de que quieres cerrar sesión?');
     if (confirmLogout) {
         localStorage.removeItem('session');
-        showNotification('Sesión cerrada correctamente', 'success');
+        localStorage.removeItem('currentUser');
+        
+        try {
+            showNotification('Sesión cerrada correctamente', 'success');
+        } catch (error) {
+            console.log('Sesión cerrada correctamente');
+        }
+        
         setTimeout(() => {
             window.location.reload();
         }, 1000);
+    } else {
+        // Si cancela, resetear el flag
+        window.logoutInProgress = false;
     }
 }
 
