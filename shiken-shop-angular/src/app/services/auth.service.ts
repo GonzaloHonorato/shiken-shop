@@ -99,9 +99,12 @@ export class AuthService {
   // ===================================
   
   async login(credentials: LoginCredentials, rememberMe = false): Promise<{ success: boolean; message: string }> {
+    console.log('🔑 AuthService: Iniciando login', { credentials: credentials.email, rememberMe });
+    
     try {
       // Verificar si la cuenta está bloqueada
       if (this.isAccountLocked()) {
+        console.log('🔒 AuthService: Cuenta bloqueada');
         return {
           success: false,
           message: 'Cuenta bloqueada por múltiples intentos fallidos. Intenta nuevamente más tarde.'
@@ -110,6 +113,7 @@ export class AuthService {
       
       // Obtener usuarios del localStorage
       const users = this.getUsersFromStorage();
+      console.log('👥 AuthService: Usuarios disponibles', users.length);
       
       // Buscar usuario
       const user = users.find(u => 
@@ -303,8 +307,14 @@ export class AuthService {
     
     const now = new Date().getTime();
     const lockTime = parseInt(lockoutTime);
+    const isLocked = (now - lockTime) < this.config.lockoutTime;
     
-    return (now - lockTime) < this.config.lockoutTime;
+    // Si el bloqueo ha expirado, limpiarlo automáticamente
+    if (!isLocked) {
+      this.clearLockout();
+    }
+    
+    return isLocked;
   }
   
   private handleFailedLogin(): void {
@@ -326,6 +336,15 @@ export class AuthService {
   private clearLoginAttempts(): void {
     localStorage.removeItem('loginAttempts');
     localStorage.removeItem('lockoutTime');
+  }
+  
+  /**
+   * Limpia el bloqueo de cuenta (público para debugging)
+   */
+  public clearLockout(): void {
+    localStorage.removeItem('loginAttempts');
+    localStorage.removeItem('lockoutTime');
+    console.log('🔓 AuthService: Bloqueo de cuenta eliminado');
   }
   
   // ===================================

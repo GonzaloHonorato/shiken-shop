@@ -4,6 +4,7 @@ import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angula
 import { Router, ActivatedRoute, RouterModule } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { NotificationService } from '../../services/notification.service';
+import { DataService } from '../../services/data.service';
 import { LoginCredentials } from '../../models';
 
 @Component({
@@ -179,6 +180,14 @@ import { LoginCredentials } from '../../models';
               <p><strong class="text-blue-300">Admin:</strong> admin&#64;shikenshop.com / Admin123</p>
               <p><strong class="text-pink-300">Comprador:</strong> comprador&#64;test.com / Comprador123</p>
             </div>
+            <!-- Debug Button para desarrollo -->
+            <button 
+              type="button"
+              (click)="resetLockout()"
+              class="mt-2 px-3 py-1 bg-red-500/20 border border-red-500/50 rounded text-red-400 text-xs hover:bg-red-500/30 transition-colors"
+            >
+              🔓 Resetear bloqueos (Debug)
+            </button>
           </div>
 
         </div>
@@ -205,6 +214,7 @@ export class LoginComponent implements OnInit {
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private notificationService = inject(NotificationService);
+  private dataService = inject(DataService); // Para asegurar inicialización de datos
 
   loginForm: FormGroup;
   isLoading = false;
@@ -220,11 +230,21 @@ export class LoginComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    console.log('🚀 LoginComponent: Inicializando componente');
+    
+    // Asegurar que el DataService esté inicializado
+    console.log('📦 LoginComponent: DataService inicializado', {
+      users: this.dataService.users().length,
+      products: this.dataService.products().length
+    });
+    
     // Obtener returnUrl de query params
     this.returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/';
+    console.log('🔗 LoginComponent: ReturnUrl configurado:', this.returnUrl);
     
     // Verificar si ya hay una sesión activa
     if (this.authService.isAuthenticated()) {
+      console.log('✅ LoginComponent: Usuario ya autenticado, redirigiendo...');
       this.redirectBasedOnRole();
     }
 
@@ -242,12 +262,19 @@ export class LoginComponent implements OnInit {
   }
 
   async onSubmit(): Promise<void> {
+    console.log('🔐 Login: Formulario enviado', { 
+      formValid: this.loginForm.valid, 
+      formValue: this.loginForm.value 
+    });
+    
     if (this.loginForm.invalid) {
+      console.log('❌ Login: Formulario inválido');
       this.markFormGroupTouched();
       return;
     }
 
     this.isLoading = true;
+    console.log('⏳ Login: Iniciando proceso de autenticación...');
 
     try {
       const { identifier, password, rememberMe } = this.loginForm.value;
@@ -258,7 +285,11 @@ export class LoginComponent implements OnInit {
         password: password
       };
       
+      console.log('📝 Login: Credenciales preparadas', { email: credentials.email, rememberMe });
+      
       const result = await this.authService.login(credentials, rememberMe);
+      
+      console.log('📊 Login: Resultado del login', result);
       
       if (result.success) {
         // Login exitoso - obtener usuario actual
@@ -276,10 +307,11 @@ export class LoginComponent implements OnInit {
         this.notificationService.error(result.message || 'Error al iniciar sesión');
       }
     } catch (error) {
-      console.error('Error en login:', error);
+      console.error('💥 Login: Error inesperado:', error);
       this.notificationService.error('Error inesperado al iniciar sesión');
     } finally {
       this.isLoading = false;
+      console.log('🏁 Login: Proceso finalizado, isLoading = false');
     }
   }
 
@@ -300,5 +332,13 @@ export class LoginComponent implements OnInit {
       const control = this.loginForm.get(key);
       control?.markAsTouched();
     });
+  }
+
+  /**
+   * Método de debugging para resetear bloqueos durante desarrollo
+   */
+  resetLockout(): void {
+    this.authService.clearLockout();
+    this.notificationService.success('Bloqueos de cuenta reseteados');
   }
 }
