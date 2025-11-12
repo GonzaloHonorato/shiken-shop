@@ -129,11 +129,11 @@ export const routes: Routes = [
       //   title: 'Gestión de Ventas - ShikenShop'
       // }
     ]
-  },  // FASE 5: Mi Cuenta - Usuarios autenticados
+  },  // FASE 5: My Account - Usuarios autenticados
   {
     path: 'mi-cuenta',
     canActivate: [AuthGuard],
-    loadComponent: () => import('./pages/mi-cuenta/mi-cuenta.component').then(m => m.MiCuentaComponent),
+    loadComponent: () => import('./pages/my-account/my-account.component').then(m => m.MyAccountComponent),
     title: 'Mi Cuenta - ShikenShop'
   },
 
