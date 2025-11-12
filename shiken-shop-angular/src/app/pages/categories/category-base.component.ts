@@ -1,0 +1,196 @@
+import { Component, OnInit, OnDestroy, signal, computed, inject, input } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
+import { Subject, takeUntil } from 'rxjs';
+
+import { DataService } from '../../services/data.service';
+import { AuthService } from '../../services/auth.service';
+import { NotificationService } from '../../services/notification.service';
+import { Product, ProductCategoryEnum } from '../../models';
+
+// Interface para configuración de categoría
+export interface CategoryConfig {
+  category: ProductCategoryEnum;
+  title: string;
+  description: string;
+  icon: string;
+  gradientFrom: string;
+  gradientTo: string;
+  borderColor: string;
+  accentColor: string;
+}
+
+@Component({
+  selector: 'app-category-base',
+  standalone: true,
+  imports: [CommonModule, RouterModule],
+  templateUrl: './category-base.component.html',
+  styleUrls: ['./category-base.component.scss']
+})
+export class CategoryBaseComponent implements OnInit, OnDestroy {
+  private dataService = inject(DataService);
+  private authService = inject(AuthService);
+  private notificationService = inject(NotificationService);
+  private destroy$ = new Subject<void>();
+
+  // Input para configuración de la categoría
+  config = input.required<CategoryConfig>();
+
+  // Signals para filtros
+  private priceFilter = signal<{ min: number; max: number } | null>(null);
+  private sortBy = signal<string>('name');
+  private showOnlyDiscount = signal<boolean>(false);
+
+  // Computed para productos filtrados
+  private categoryProducts = computed(() => 
+    this.dataService.products().filter((p: Product) => 
+      p.category === this.config().category && p.active
+    )
+  );
+
+  filteredProducts = computed(() => {
+    let products = [...this.categoryProducts()];
+
+    // Filtro por precio
+    const priceRange = this.priceFilter();
+    if (priceRange) {
+      products = products.filter((p: Product) => 
+        p.price >= priceRange.min && p.price <= priceRange.max
+      );
+    }
+
+    // Filtro por descuentos
+    if (this.showOnlyDiscount()) {
+      products = products.filter((p: Product) => p.discount && p.discount > 0);
+    }
+
+    // Ordenamiento
+    const sort = this.sortBy();
+    switch (sort) {
+      case 'price-asc':
+        products = products.sort((a: Product, b: Product) => a.price - b.price);
+        break;
+      case 'price-desc':
+        products = products.sort((a: Product, b: Product) => b.price - a.price);
+        break;
+      case 'rating':
+        products = products.sort((a: Product, b: Product) => (b.rating || 0) - (a.rating || 0));
+        break;
+      case 'newest':
+        products = products.sort((a: Product, b: Product) => 
+          new Date(b.releaseDate || b.createdAt).getTime() - 
+          new Date(a.releaseDate || a.createdAt).getTime()
+        );
+        break;
+      default: // name
+        products = products.sort((a: Product, b: Product) => a.name.localeCompare(b.name));
+        break;
+    }
+
+    return products;
+  });
+
+  ngOnInit(): void {
+    console.log('🎮 [CATEGORY] Inicializando categoría:', this.config().category);
+    
+    // Log de productos disponibles
+    console.log('📦 [CATEGORY] Productos en categoría:', {
+      category: this.config().category,
+      total: this.categoryProducts().length,
+      products: this.categoryProducts().map((p: Product) => ({ name: p.name, price: p.price }))
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  onPriceFilterChange(event: Event): void {
+    const value = (event.target as HTMLSelectElement).value;
+    
+    if (!value) {
+      this.priceFilter.set(null);
+      return;
+    }
+
+    const [min, max] = value.split('-').map(Number);
+    this.priceFilter.set({ min, max });
+    
+    console.log('💰 [CATEGORY] Filtro de precio aplicado:', { min, max });
+  }
+
+  onSortChange(event: Event): void {
+    const value = (event.target as HTMLSelectElement).value;
+    this.sortBy.set(value);
+    
+    console.log('🔀 [CATEGORY] Ordenamiento aplicado:', value);
+  }
+
+  onDiscountFilterChange(event: Event): void {
+    const checked = (event.target as HTMLInputElement).checked;
+    this.showOnlyDiscount.set(checked);
+    
+    console.log('🏷️ [CATEGORY] Filtro de ofertas:', checked ? 'activado' : 'desactivado');
+  }
+
+  clearFilters(): void {
+    this.priceFilter.set(null);
+    this.sortBy.set('name');
+    this.showOnlyDiscount.set(false);
+    
+    // Reset form controls
+    const selects = document.querySelectorAll('select');
+    selects.forEach(select => select.selectedIndex = 0);
+    
+    const checkbox = document.querySelector('input[type="checkbox"]') as HTMLInputElement;
+    if (checkbox) checkbox.checked = false;
+    
+    console.log('🧹 [CATEGORY] Filtros limpiados');
+    this.notificationService.info('Filtros limpiados');
+  }
+
+  addToCart(product: Product): void {
+    if (!this.authService.isAuthenticated()) {
+      this.notificationService.warning('Debes iniciar sesión para agregar productos al carrito');
+      return;
+    }
+
+    // TODO: Implementar lógica de carrito cuando se cree el servicio
+    console.log('🛒 [CATEGORY] Agregando al carrito:', product.name);
+    this.notificationService.success(`${product.name} agregado al carrito`);
+  }
+
+  formatPrice(price: number): string {
+    return new Intl.NumberFormat('es-CL').format(price);
+  }
+
+  trackByProductId(index: number, product: Product): string {
+    return product.id;
+  }
+
+  getStars(rating: number): string[] {
+    const fullStars = Math.floor(rating);
+    const hasHalfStar = rating % 1 >= 0.5;
+    const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
+    
+    const stars: string[] = [];
+    
+    // Estrellas llenas
+    for (let i = 0; i < fullStars; i++) {
+      stars.push('★');
+    }
+    
+    // Media estrella
+    if (hasHalfStar) {
+      stars.push('☆');
+    }
+    
+    // Estrellas vacías
+    for (let i = 0; i < emptyStars; i++) {
+      stars.push('☆');
+    }
+    
+    return stars;
+  }
+}
