@@ -921,5 +921,33 @@ export class DataService {
     return true;
   }
 
+  // ===================================
+  // USER MANAGEMENT METHODS
+  // ===================================
+
+  /**
+   * Actualiza el rol de un usuario
+   */
+  public updateUserRole(userEmail: string, newRole: UserRole): boolean {
+    const currentUsers = this.users();
+    const userIndex = currentUsers.findIndex(u => u.email === userEmail);
+    
+    if (userIndex === -1) {
+      console.error('❌ Usuario no encontrado:', userEmail);
+      return false;
+    }
+
+    const updatedUsers = [...currentUsers];
+    updatedUsers[userIndex] = {
+      ...updatedUsers[userIndex],
+      role: newRole
+    };
+
+    this.saveUsers(updatedUsers);
+    console.log('✅ Rol de usuario actualizado:', userEmail, 'nuevo rol:', newRole);
+    
+    return true;
+  }
+
 
 }

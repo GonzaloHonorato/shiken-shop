@@ -113,12 +113,17 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/admin-products/admin-products.component').then(m => m.AdminProductsComponent),
         title: 'Gestión de Productos - ShikenShop'
       },
-      // TODO: Descomentar cuando se creen los componentes
+      { 
+        path: 'usuarios', 
+        loadComponent: () => import('./pages/admin-users/admin-users.component').then(m => m.AdminUsersComponent),
+        title: 'Gestión de Usuarios - ShikenShop'
+      },
+      // TODO: Descomentar cuando se cree el componente
       // { 
-      //   path: 'usuarios', 
-      //   loadComponent: () => import('./pages/admin-users/admin-users.component').then(m => m.AdminUsersComponent),
-      //   title: 'Gestión de Usuarios - ShikenShop'
-      // },
+      //   path: 'ventas', 
+      //   loadComponent: () => import('./pages/admin-sales/admin-sales.component').then(m => m.AdminSalesComponent),
+      //   title: 'Gestión de Ventas - ShikenShop'
+      // }
       // { 
       //   path: 'ventas', 
       //   loadComponent: () => import('./pages/admin-sales/admin-sales.component').then(m => m.AdminSalesComponent),
