@@ -18,8 +18,8 @@ export class AccionComponent {
     icon: `<svg class="w-full h-full" fill="currentColor" viewBox="0 0 24 24">
       <path d="M13 10V3L4 14h7v7l9-11h-7z"/>
     </svg>`,
-    gradientFrom: 'red-800',
-    gradientTo: 'orange-700',
+    gradientFrom: 'red',
+    gradientTo: 'orange',
     borderColor: 'red-500',
     accentColor: 'red-400'
   };

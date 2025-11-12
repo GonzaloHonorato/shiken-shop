@@ -169,6 +169,24 @@ export class CategoryBaseComponent implements OnInit, OnDestroy {
     return product.id;
   }
 
+  getPriceColor(): string {
+    const colorMap: Record<string, string> = {
+      'red-400': '#f87171',      // Acción
+      'purple-400': '#c084fc',   // RPG
+      'green-400': '#4ade80',    // Estrategia
+      'amber-400': '#fbbf24'     // Aventura
+    };
+    return colorMap[this.config().accentColor] || '#f87171';
+  }
+
+  getButtonClasses(): string {
+    return `bg-gradient-to-r from-${this.config().gradientFrom}-600 to-${this.config().gradientTo}-600 hover:from-${this.config().gradientFrom}-700 hover:to-${this.config().gradientTo}-700 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-300 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed`;
+  }
+
+  getBadgeClasses(): string {
+    return `bg-${this.config().accentColor}-600 px-3 py-1 rounded-full text-sm font-bold pulse text-white`;
+  }
+
   getStars(rating: number): string[] {
     const fullStars = Math.floor(rating);
     const hasHalfStar = rating % 1 >= 0.5;

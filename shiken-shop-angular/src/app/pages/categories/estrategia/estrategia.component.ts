@@ -19,8 +19,8 @@ export class EstrategiaComponent {
       <path d="M9 11H7v9a2 2 0 002 2h8a2 2 0 002-2V9a2 2 0 00-2-2h-3V5a2 2 0 00-2-2H9a2 2 0 00-2 2v6z"/>
       <path d="M9 7h3v2H9V7z"/>
     </svg>`,
-    gradientFrom: 'green-800',
-    gradientTo: 'teal-700',
+    gradientFrom: 'green',
+    gradientTo: 'teal',
     borderColor: 'green-500',
     accentColor: 'green-400'
   };
