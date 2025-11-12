@@ -10,6 +10,13 @@ export interface User {
   role: 'admin' | 'buyer';
   active: boolean;
   registeredAt: string;
+  // Propiedades adicionales para perfil completo
+  fullName?: string;
+  username?: string;
+  phone?: string;
+  birthdate?: string;
+  address?: string;
+  updatedAt?: string;
 }
 
 // ===================================
