@@ -178,21 +178,14 @@ export class CartComponent implements OnInit {
       return;
     }
 
-    // Crear la orden
-    const order: Order = {
-      orderNumber: this.generateOrderId(),
+    // Crear la orden usando el método del servicio
+    const order = this.dataService.createOrder({
       items: cart,
       total: summary.total,
       date: new Date().toISOString(),
       status: OrderStatus.DELIVERED,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
-
-    // Guardar la orden
-    const orders = this.dataService.orders();
-    const updatedOrders = [...orders, order];
-    this.dataService.saveOrders(updatedOrders);
+      user: user
+    });
 
     // Limpiar el carrito
     this.dataService.saveCart([]);
@@ -205,14 +198,7 @@ export class CartComponent implements OnInit {
     this.notificationService.success('¡Compra realizada con éxito!');
   }
 
-  /**
-   * Genera un ID único para la orden
-   */
-  private generateOrderId(): string {
-    const timestamp = Date.now();
-    const random = Math.random().toString(36).substring(2, 9).toUpperCase();
-    return `ORD-${timestamp}-${random}`;
-  }
+
 
   // ===================================
   // MODAL MANAGEMENT

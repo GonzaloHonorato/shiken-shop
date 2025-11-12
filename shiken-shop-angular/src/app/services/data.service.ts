@@ -685,7 +685,9 @@ export class DataService {
 
   public saveOrders(orders: Order[]): void {
     localStorage.setItem(StorageKeys.ORDERS, JSON.stringify(orders));
-    this.loadOrders();
+    this.ordersSignal.set(orders);
+    this.ordersSubject.next(orders);
+    console.log('💾 Órdenes guardadas:', orders.length, 'órdenes');
   }
 
   public saveCart(cart: CartItem[]): void {
@@ -976,6 +978,35 @@ export class DataService {
     console.log('✅ Estado de orden actualizado:', orderNumber, 'nuevo estado:', newStatus);
     
     return true;
+  }
+
+  /**
+   * Crea una nueva orden
+   */
+  public createOrder(orderData: Omit<Order, 'orderNumber' | 'createdAt' | 'updatedAt'>): Order {
+    const newOrder: Order = {
+      ...orderData,
+      orderNumber: this.generateOrderNumber(),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+
+    const currentOrders = this.orders();
+    const updatedOrders = [...currentOrders, newOrder];
+    
+    this.saveOrders(updatedOrders);
+    console.log('✅ Orden creada:', newOrder.orderNumber);
+    
+    return newOrder;
+  }
+
+  /**
+   * Genera un número único para la orden
+   */
+  private generateOrderNumber(): string {
+    const timestamp = Date.now();
+    const random = Math.random().toString(36).substring(2, 9).toUpperCase();
+    return `ORD-${timestamp}-${random}`;
   }
 
 
