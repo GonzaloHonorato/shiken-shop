@@ -165,6 +165,8 @@ export class AdminProductsComponent implements OnInit {
   }
 
   editProduct(product: Product): void {
+    console.log('✏️ Editando producto:', product);
+    
     this.editingProduct.set(product);
     this.productForm.patchValue({
       name: product.name,
@@ -178,9 +180,13 @@ export class AdminProductsComponent implements OnInit {
       featured: product.featured || false
     });
     this.isModalOpen.set(true);
+    
+    console.log('✏️ Formulario poblado con valores:', this.productForm.value);
   }
 
   deleteProduct(product: Product): void {
+    console.log('🗑️ Intentando eliminar producto:', product);
+    
     if (!confirm(`¿Estás seguro de que deseas eliminar "${product.name}"?`)) {
       return;
     }
@@ -188,10 +194,16 @@ export class AdminProductsComponent implements OnInit {
     this.isLoading.set(true);
 
     try {
-      this.dataService.deleteProduct(product.id);
-      this.notificationService.success(`Producto "${product.name}" eliminado correctamente`);
+      const result = this.dataService.deleteProduct(product.id);
+      console.log('🗑️ Resultado eliminación:', result);
+      
+      if (result) {
+        this.notificationService.success(`Producto "${product.name}" eliminado correctamente`);
+      } else {
+        this.notificationService.error('No se pudo encontrar el producto para eliminar');
+      }
     } catch (error) {
-      console.error('Error eliminando producto:', error);
+      console.error('❌ Error eliminando producto:', error);
       this.notificationService.error('Error al eliminar el producto');
     } finally {
       this.isLoading.set(false);
@@ -235,6 +247,7 @@ export class AdminProductsComponent implements OnInit {
         category: formValue.category,
         description: formValue.description,
         price: Number(formValue.price),
+        originalPrice: Number(formValue.price), // Set original price same as price initially
         discount: Number(formValue.discount) || 0,
         stock: Number(formValue.stock),
         image: formValue.image || this.generateDefaultImage(formValue.name),
@@ -245,18 +258,35 @@ export class AdminProductsComponent implements OnInit {
       if (this.isEditing()) {
         // Update existing product
         const product = this.editingProduct()!;
-        this.dataService.updateProduct(product.id, { ...product, ...productData });
+        const updatedProduct = { ...product, ...productData };
+        this.dataService.updateProduct(product.id, updatedProduct);
         this.notificationService.success('Producto actualizado correctamente');
+        console.log('✅ Producto actualizado:', updatedProduct);
       } else {
-        // Create new product
+        // Create new product with all required fields
         const newProduct: Omit<Product, 'id'> = {
-          ...productData as Product,
+          name: productData.name!,
+          description: productData.description!,
+          category: productData.category!,
+          price: productData.price!,
+          originalPrice: productData.originalPrice!,
+          discount: productData.discount!,
+          stock: productData.stock!,
+          image: productData.image!,
+          active: productData.active!,
+          featured: productData.featured!,
           rating: 0,
           reviews: 0,
-          releaseDate: new Date().toISOString().split('T')[0]
+          releaseDate: new Date().toISOString().split('T')[0],
+          developer: 'ShikenShop',
+          platform: ['PC'],
+          tags: [productData.category!],
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
         };
         this.dataService.createProduct(newProduct);
         this.notificationService.success('Producto creado correctamente');
+        console.log('✅ Producto creado:', newProduct);
       }
 
       this.closeModal();
