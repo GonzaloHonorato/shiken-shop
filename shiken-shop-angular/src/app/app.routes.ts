@@ -38,6 +38,12 @@ export const routes: Routes = [
     loadComponent: () => import('./components/auth/register.component').then(m => m.RegisterComponent),
     title: 'Registro - ShikenShop'
   },
+  {
+    path: 'forgot-password',
+    canActivate: [GuestGuard], 
+    loadComponent: () => import('./pages/auth/forgot-password/forgot-password.component').then(m => m.ForgotPasswordComponent),
+    title: 'Recuperar Contraseña - ShikenShop'
+  },
 
   // FASE 2: Categorías de juegos - Rutas públicas
   {
