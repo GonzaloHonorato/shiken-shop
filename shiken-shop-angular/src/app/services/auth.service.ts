@@ -99,12 +99,9 @@ export class AuthService {
   // ===================================
   
   async login(credentials: LoginCredentials, rememberMe = false): Promise<{ success: boolean; message: string }> {
-    console.log('🔑 AuthService: Iniciando login', { credentials: credentials.email, rememberMe });
-    
     try {
       // Verificar si la cuenta está bloqueada
       if (this.isAccountLocked()) {
-        console.log('🔒 AuthService: Cuenta bloqueada');
         return {
           success: false,
           message: 'Cuenta bloqueada por múltiples intentos fallidos. Intenta nuevamente más tarde.'
@@ -113,7 +110,6 @@ export class AuthService {
       
       // Obtener usuarios del localStorage
       const users = this.getUsersFromStorage();
-      console.log('👥 AuthService: Usuarios disponibles', users.length);
       
       // Buscar usuario
       const user = users.find(u => 

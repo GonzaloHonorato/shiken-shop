@@ -230,21 +230,14 @@ export class LoginComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    console.log('🚀 LoginComponent: Inicializando componente');
-    
     // Asegurar que el DataService esté inicializado
-    console.log('📦 LoginComponent: DataService inicializado', {
-      users: this.dataService.users().length,
-      products: this.dataService.products().length
-    });
+    this.dataService.users(); // Trigger initialization
     
     // Obtener returnUrl de query params
     this.returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/';
-    console.log('🔗 LoginComponent: ReturnUrl configurado:', this.returnUrl);
     
     // Verificar si ya hay una sesión activa
     if (this.authService.isAuthenticated()) {
-      console.log('✅ LoginComponent: Usuario ya autenticado, redirigiendo...');
       this.redirectBasedOnRole();
     }
 
@@ -262,19 +255,12 @@ export class LoginComponent implements OnInit {
   }
 
   async onSubmit(): Promise<void> {
-    console.log('🔐 Login: Formulario enviado', { 
-      formValid: this.loginForm.valid, 
-      formValue: this.loginForm.value 
-    });
-    
     if (this.loginForm.invalid) {
-      console.log('❌ Login: Formulario inválido');
       this.markFormGroupTouched();
       return;
     }
 
     this.isLoading = true;
-    console.log('⏳ Login: Iniciando proceso de autenticación...');
 
     try {
       const { identifier, password, rememberMe } = this.loginForm.value;
@@ -285,11 +271,7 @@ export class LoginComponent implements OnInit {
         password: password
       };
       
-      console.log('📝 Login: Credenciales preparadas', { email: credentials.email, rememberMe });
-      
       const result = await this.authService.login(credentials, rememberMe);
-      
-      console.log('📊 Login: Resultado del login', result);
       
       if (result.success) {
         // Login exitoso - obtener usuario actual
@@ -307,11 +289,10 @@ export class LoginComponent implements OnInit {
         this.notificationService.error(result.message || 'Error al iniciar sesión');
       }
     } catch (error) {
-      console.error('💥 Login: Error inesperado:', error);
+      console.error('Error en login:', error);
       this.notificationService.error('Error inesperado al iniciar sesión');
     } finally {
       this.isLoading = false;
-      console.log('🏁 Login: Proceso finalizado, isLoading = false');
     }
   }
 
