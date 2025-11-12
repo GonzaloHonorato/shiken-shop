@@ -701,7 +701,10 @@ export class DataService {
    * Agrega un producto al carrito
    */
   public addToCart(productId: string, quantity: number = 1): boolean {
+    console.log('🛒 [DataService] addToCart llamado con:', { productId, quantity });
+    
     const product = this.products().find(p => p.id === productId);
+    console.log('🛒 [DataService] Producto encontrado:', product);
     
     if (!product) {
       console.warn('Producto no encontrado:', productId);
@@ -709,6 +712,8 @@ export class DataService {
     }
 
     const currentCart = [...this.cart()];
+    console.log('🛒 [DataService] Carrito actual:', currentCart);
+    
     const existingItemIndex = currentCart.findIndex(item => item.id === productId);
 
     if (existingItemIndex >= 0) {
@@ -718,6 +723,7 @@ export class DataService {
       
       if (newQuantity <= product.stock) {
         existingItem.quantity = newQuantity;
+        console.log('🛒 [DataService] Actualizando cantidad existente:', newQuantity);
       } else {
         console.warn('Stock insuficiente para el producto:', product.name);
         return false;
@@ -735,6 +741,7 @@ export class DataService {
           quantity: quantity,
           maxStock: product.stock
         };
+        console.log('🛒 [DataService] Creando nuevo cartItem:', cartItem);
         currentCart.push(cartItem);
       } else {
         console.warn('Stock insuficiente para el producto:', product.name);
@@ -742,7 +749,9 @@ export class DataService {
       }
     }
 
+    console.log('🛒 [DataService] Carrito después de agregar:', currentCart);
     this.saveCart(currentCart);
+    console.log('🛒 [DataService] Carrito guardado, nuevo carrito:', this.cart());
     return true;
   }
 

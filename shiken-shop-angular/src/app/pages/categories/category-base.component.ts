@@ -156,8 +156,10 @@ export class CategoryBaseComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // TODO: Implementar lógica de carrito cuando se cree el servicio
     console.log('🛒 [CATEGORY] Agregando al carrito:', product.name);
+    
+    // Usar el método addToCart del DataService
+    this.dataService.addToCart(product.id, 1);
     this.notificationService.success(`${product.name} agregado al carrito`);
   }
 
