@@ -187,6 +187,27 @@ export class CategoryBaseComponent implements OnInit, OnDestroy {
     return `bg-${this.config().accentColor}-600 px-3 py-1 rounded-full text-sm font-bold pulse text-white`;
   }
 
+  getPageBackground(): string {
+    const backgroundMap: Record<string, string> = {
+      'red-400': 'linear-gradient(to bottom right, #111827, #7f1d1d, #111827)',      // Acción: gray-900, red-900, gray-900  
+      'purple-400': 'linear-gradient(to bottom right, #111827, #581c87, #111827)',   // RPG: gray-900, purple-900, gray-900
+      'green-400': 'linear-gradient(to bottom right, #111827, #1e3a8a, #111827)',    // Estrategia: gray-900, blue-900, gray-900 (como en original)
+      'amber-400': 'linear-gradient(to bottom right, #111827, #14532d, #111827)'     // Aventura: gray-900, green-900, gray-900 (como en original)
+    };
+    return backgroundMap[this.config().accentColor] || backgroundMap['red-400'];
+  }
+
+  getBannerBackground(): string {
+    // El banner es más sutil, solo usa el color principal
+    const bannerMap: Record<string, string> = {
+      'red-400': 'linear-gradient(to bottom right, #111827, #991b1b, #111827)',      // Acción: red-800
+      'purple-400': 'linear-gradient(to bottom right, #111827, #6b21a8, #111827)',   // RPG: purple-800  
+      'green-400': 'linear-gradient(to bottom right, #111827, #1e40af, #111827)',    // Estrategia: blue-800 (como en original)
+      'amber-400': 'linear-gradient(to bottom right, #111827, #166534, #111827)'     // Aventura: green-800 (como en original)
+    };
+    return bannerMap[this.config().accentColor] || bannerMap['red-400'];
+  }
+
   getStars(rating: number): string[] {
     const fullStars = Math.floor(rating);
     const hasHalfStar = rating % 1 >= 0.5;

@@ -1,7 +1,7 @@
-<div class="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+<div class="min-h-screen" [style.background]="getPageBackground()">
   <!-- Banner de categoría -->
   <section class="pt-32 pb-12 px-4" 
-           [ngClass]="'bg-gradient-to-br from-gray-900 via-' + config().gradientFrom + ' to-gray-900'">
+           [style.background]="getBannerBackground()">
     <div class="container mx-auto text-center">
       <div class="inline-block mb-6 bounce-animation">
         <div [innerHTML]="config().icon" 

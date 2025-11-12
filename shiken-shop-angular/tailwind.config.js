@@ -34,6 +34,14 @@ module.exports = {
     'to-orange-600',
     'from-amber-700',
     'to-orange-700',
+    'from-green-600',
+    'to-emerald-600',
+    'from-green-700',
+    'to-emerald-700',
+    'from-blue-600',
+    'to-indigo-600',
+    'from-blue-700',
+    'to-indigo-700',
     // Gradientes para backgrounds
     'from-red-800',
     'via-red-800',
@@ -41,8 +49,12 @@ module.exports = {
     'via-purple-800',
     'from-green-800',
     'via-green-800',
+    'from-blue-800',
+    'via-blue-800',
     'from-amber-800',
     'via-amber-800',
+    // Borders adicionales
+    'border-blue-500',
   ],
   theme: {
     extend: {
