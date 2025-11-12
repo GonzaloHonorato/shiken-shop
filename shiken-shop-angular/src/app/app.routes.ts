@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { AuthGuard, AdminGuard, BuyerGuard, GuestGuard, RoleGuard } from './guards';
 
 export const routes: Routes = [
   // Ruta por defecto - Home
@@ -24,14 +25,16 @@ export const routes: Routes = [
 
   // TODO: Las siguientes rutas se activarán cuando creemos los componentes correspondientes
   
-  // FASE 2: Autenticación - Rutas públicas
+  // FASE 2: Autenticación - Rutas públicas (solo para invitados)
   // {
   //   path: 'login',
+  //   canActivate: [GuestGuard],
   //   loadComponent: () => import('./pages/login/login.component').then(m => m.LoginComponent),
   //   title: 'Iniciar Sesión - ShikenShop'
   // },
   // {
   //   path: 'register', 
+  //   canActivate: [GuestGuard],
   //   loadComponent: () => import('./pages/register/register.component').then(m => m.RegisterComponent),
   //   title: 'Registro - ShikenShop'
   // },
@@ -58,34 +61,75 @@ export const routes: Routes = [
   //   title: 'Juegos de Aventura - ShikenShop'
   // },
 
-  // FASE 3: Carrito de compras
+  // FASE 3: Carrito de compras (requiere autenticación)
   // {
   //   path: 'carrito',
+  //   canActivate: [AuthGuard],
   //   loadComponent: () => import('./pages/cart/cart.component').then(m => m.CartComponent),
   //   title: 'Carrito de Compras - ShikenShop'
   // },
+  
+  // Mi cuenta (accesible para usuarios autenticados de cualquier rol)
+  // {
+  //   path: 'mi-cuenta',
+  //   canActivate: [AuthGuard],
+  //   loadComponent: () => import('./pages/my-account/my-account.component').then(m => m.MyAccountComponent),
+  //   title: 'Mi Cuenta - ShikenShop'
+  // },
 
-  // FASE 4: Panel de Administrador - Rutas protegidas
+  // FASE 4: Panel de Administrador - Solo admins
   // {
   //   path: 'admin',
-  //   canActivate: [AuthGuard, AdminGuard],
+  //   canActivate: [AdminGuard],
   //   children: [
-  //     { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
-  //     { path: 'dashboard', loadComponent: () => import('./pages/admin-dashboard/admin-dashboard.component').then(m => m.AdminDashboardComponent) },
-  //     { path: 'productos', loadComponent: () => import('./pages/admin-products/admin-products.component').then(m => m.AdminProductsComponent) },
-  //     { path: 'usuarios', loadComponent: () => import('./pages/admin-users/admin-users.component').then(m => m.AdminUsersComponent) },
-  //     { path: 'ventas', loadComponent: () => import('./pages/admin-sales/admin-sales.component').then(m => m.AdminSalesComponent) }
+  //     { 
+  //       path: '', 
+  //       redirectTo: 'dashboard', 
+  //       pathMatch: 'full' 
+  //     },
+  //     { 
+  //       path: 'dashboard', 
+  //       loadComponent: () => import('./pages/admin-dashboard/admin-dashboard.component').then(m => m.AdminDashboardComponent),
+  //       title: 'Dashboard Administrativo - ShikenShop'
+  //     },
+  //     { 
+  //       path: 'productos', 
+  //       loadComponent: () => import('./pages/admin-products/admin-products.component').then(m => m.AdminProductsComponent),
+  //       title: 'Gestión de Productos - ShikenShop'
+  //     },
+  //     { 
+  //       path: 'usuarios', 
+  //       loadComponent: () => import('./pages/admin-users/admin-users.component').then(m => m.AdminUsersComponent),
+  //       title: 'Gestión de Usuarios - ShikenShop'
+  //     },
+  //     { 
+  //       path: 'ventas', 
+  //       loadComponent: () => import('./pages/admin-sales/admin-sales.component').then(m => m.AdminSalesComponent),
+  //       title: 'Gestión de Ventas - ShikenShop'
+  //     }
   //   ]
   // },
 
-  // FASE 4: Panel de Comprador - Rutas protegidas  
+  // FASE 4: Panel de Comprador - Solo buyers
   // {
   //   path: 'buyer',
-  //   canActivate: [AuthGuard, BuyerGuard],
+  //   canActivate: [BuyerGuard],
   //   children: [
-  //     { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
-  //     { path: 'dashboard', loadComponent: () => import('./pages/buyer-dashboard/buyer-dashboard.component').then(m => m.BuyerDashboardComponent) },
-  //     { path: 'mis-compras', loadComponent: () => import('./pages/my-purchases/my-purchases.component').then(m => m.MyPurchasesComponent) }
+  //     { 
+  //       path: '', 
+  //       redirectTo: 'dashboard', 
+  //       pathMatch: 'full' 
+  //     },
+  //     { 
+  //       path: 'dashboard', 
+  //       loadComponent: () => import('./pages/buyer-dashboard/buyer-dashboard.component').then(m => m.BuyerDashboardComponent),
+  //       title: 'Mi Dashboard - ShikenShop'
+  //     },
+  //     { 
+  //       path: 'mis-compras', 
+  //       loadComponent: () => import('./pages/my-purchases/my-purchases.component').then(m => m.MyPurchasesComponent),
+  //       title: 'Mis Compras - ShikenShop'
+  //     }
   //   ]
   // },
 

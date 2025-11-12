@@ -1,51 +1,52 @@
 # Guards
 
-Esta carpeta contiene los guards de Angular para proteger rutas y controlar el acceso a diferentes secciones de ShikenShop.
+Esta carpeta contiene los guards (guardas de ruta) de la aplicación Angular que protegen el acceso a rutas específicas basándose en la autenticación y autorización del usuario.
 
-## Guards Principales:
+## Guards Disponibles:
 
-### Authentication Guards
-- `auth.guard.ts` - Verificar si el usuario está autenticado
-- `guest.guard.ts` - Permitir acceso solo a usuarios no autenticados
-- `admin.guard.ts` - Verificar rol de administrador
-- `buyer.guard.ts` - Verificar rol de comprador
+### AuthGuard
+- Protege rutas que requieren autenticación
+- Redirige a login si no hay sesión activa
+- Preserva URL de destino para después del login
 
-### Feature Guards
-- `cart.guard.ts` - Verificar que el carrito tenga ítems antes del checkout
-- `profile-complete.guard.ts` - Verificar que el perfil esté completo
-- `subscription.guard.ts` - Verificar suscripciones o membresías (futuro)
+### AdminGuard  
+- Protege rutas del panel administrativo
+- Solo permite acceso a usuarios con rol 'admin'
+- Redirige según el rol del usuario actual
 
-### Utility Guards
-- `unsaved-changes.guard.ts` - Prevenir navegación con cambios no guardados
-- `permissions.guard.ts` - Verificar permisos específicos
+### BuyerGuard
+- Protege rutas del panel de comprador
+- Solo permite acceso a usuarios con rol 'buyer'
+- Redirige según el rol del usuario actual
 
-## Tipos de Guards Implementados:
-- **CanActivate**: Controlar si una ruta puede ser activada
-- **CanDeactivate**: Controlar si se puede salir de una ruta
-- **CanLoad**: Controlar si un módulo puede ser cargado (lazy loading)
+### GuestGuard
+- Protege rutas de invitado (login, registro)
+- Redirige a dashboard si ya está autenticado
+- Evita acceso a login cuando ya hay sesión
 
-## Convenciones:
-- Sufijo `.guard.ts` para archivos
-- Implementar interfaces CanActivate, CanDeactivate, etc.
-- Retornar boolean, Promise<boolean> o Observable<boolean>
-- Usar inyección de dependencias para servicios requeridos
-- Manejar redirecciones en caso de acceso denegado
+### RoleGuard
+- Guard flexible que acepta múltiples roles
+- Configuración por ruta con data: { roles: [...] }
+- Manejo dinámico de permisos
 
-## Ejemplo:
+## Uso en Rutas:
+
 ```typescript
-@Injectable({
-  providedIn: 'root'
-})
-export class AuthGuard implements CanActivate {
-  constructor(private authService: AuthService, private router: Router) {}
-
-  canActivate(): boolean {
-    if (this.authService.isAuthenticated()) {
-      return true;
-    } else {
-      this.router.navigate(['/login']);
-      return false;
-    }
-  }
+// En app.routes.ts
+{ 
+  path: 'admin', 
+  canActivate: [AdminGuard], 
+  loadChildren: () => import('./admin/admin.routes') 
+},
+{ 
+  path: 'login', 
+  canActivate: [GuestGuard], 
+  component: LoginComponent 
+},
+{ 
+  path: 'mi-cuenta', 
+  canActivate: [RoleGuard], 
+  data: { roles: [UserRole.ADMIN, UserRole.BUYER] },
+  component: AccountComponent 
 }
 ```
