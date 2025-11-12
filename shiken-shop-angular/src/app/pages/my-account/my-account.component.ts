@@ -8,13 +8,13 @@ import { NotificationService } from '../../services/notification.service';
 import { User } from '../../models';
 
 @Component({
-  selector: 'app-mi-cuenta',
+  selector: 'app-my-account',
   standalone: true,
   imports: [CommonModule, RouterModule, ReactiveFormsModule],
-  templateUrl: './mi-cuenta.component.html',
-  styleUrls: ['./mi-cuenta.component.scss']
+  templateUrl: './my-account.component.html',
+  styleUrls: ['./my-account.component.scss']
 })
-export class MiCuentaComponent implements OnInit {
+export class MyAccountComponent implements OnInit {
   // ===================================
   // DEPENDENCY INJECTION
   // ===================================
@@ -120,7 +120,7 @@ export class MiCuentaComponent implements OnInit {
       address: fullUserData.address || ''
     });
 
-    console.log('� Formulario poblado con:', this.profileForm.value);
+    console.log('📝 Formulario poblado con:', this.profileForm.value);
   }
 
   // ===================================
