@@ -149,8 +149,16 @@ export class AuthService {
   
   async register(registerData: RegisterData): Promise<{ success: boolean; message: string }> {
     try {
+      console.log('🔧 [AUTH-SERVICE] Iniciando proceso de registro...', {
+        name: registerData.name,
+        email: registerData.email,
+        hasPassword: !!registerData.password,
+        hasConfirmPassword: !!registerData.confirmPassword
+      });
+
       // Validar que las contraseñas coincidan
       if (registerData.password !== registerData.confirmPassword) {
+        console.log('❌ [AUTH-SERVICE] Las contraseñas no coinciden');
         return {
           success: false,
           message: 'Las contraseñas no coinciden.'
@@ -159,10 +167,12 @@ export class AuthService {
       
       // Obtener usuarios existentes
       const users = this.getUsersFromStorage();
+      console.log('📊 [AUTH-SERVICE] Usuarios existentes en storage:', users.length);
       
       // Verificar si el email ya existe
       const existingUser = users.find(u => u.email === registerData.email);
       if (existingUser) {
+        console.log('⚠️ [AUTH-SERVICE] Email ya existe:', registerData.email);
         return {
           success: false,
           message: 'Ya existe una cuenta con este email.'
@@ -179,17 +189,45 @@ export class AuthService {
         registeredAt: new Date().toISOString()
       };
       
+      console.log('👤 [AUTH-SERVICE] Creando nuevo usuario:', {
+        name: newUser.name,
+        email: newUser.email,
+        role: newUser.role,
+        active: newUser.active
+      });
+      
       // Agregar usuario a la lista
       users.push(newUser);
       localStorage.setItem(StorageKeys.USERS, JSON.stringify(users));
       
-      return {
-        success: true,
-        message: 'Cuenta creada exitosamente. Ya puedes iniciar sesión.'
-      };
+      console.log('💾 [AUTH-SERVICE] Usuario guardado en localStorage');
+      console.log('📈 [AUTH-SERVICE] Total de usuarios después del registro:', users.length);
+      
+      // Verificar que se guardó correctamente
+      const savedUsers = this.getUsersFromStorage();
+      const savedUser = savedUsers.find(u => u.email === registerData.email);
+      console.log('✅ [AUTH-SERVICE] Verificación - usuario guardado:', !!savedUser);
+      
+      if (savedUser) {
+        // Iniciar sesión automáticamente después del registro exitoso
+        console.log('🔐 [AUTH-SERVICE] Iniciando sesión automática después del registro...');
+        this.createSession(savedUser, false); // No recordar por defecto
+        console.log('🎯 [AUTH-SERVICE] Sesión automática creada exitosamente');
+        
+        return {
+          success: true,
+          message: `¡Bienvenido a ShikenShop, ${savedUser.name}! Tu cuenta ha sido creada exitosamente.`
+        };
+      } else {
+        console.log('⚠️ [AUTH-SERVICE] No se pudo verificar el usuario guardado');
+        return {
+          success: true,
+          message: 'Cuenta creada exitosamente. Ya puedes iniciar sesión.'
+        };
+      }
       
     } catch (error) {
-      console.error('Error en registro:', error);
+      console.error('💥 [AUTH-SERVICE] Error en registro:', error);
       return {
         success: false,
         message: 'Error interno del sistema. Intenta nuevamente.'

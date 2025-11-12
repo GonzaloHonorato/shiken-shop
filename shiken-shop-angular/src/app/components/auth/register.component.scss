@@ -48,12 +48,24 @@ input, textarea {
 
 // Password Toggle Button Enhancement
 .relative button {
+  // Ensure perfect alignment and sizing
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  min-height: 24px;
+  
   &:hover {
     transform: scale(1.1);
   }
   
   &:active {
     transform: scale(0.95);
+  }
+  
+  // Ensure SVG is properly centered
+  svg {
+    flex-shrink: 0;
   }
 }
 

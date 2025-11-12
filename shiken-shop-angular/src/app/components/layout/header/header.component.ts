@@ -2,6 +2,8 @@ import { Component, OnInit, OnDestroy, signal, computed, inject } from '@angular
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { Subject, takeUntil, fromEvent } from 'rxjs';
+import { AuthService } from '../../../services/auth.service';
+import { NotificationService } from '../../../services/notification.service';
 
 @Component({
   selector: 'app-header',
@@ -208,64 +210,67 @@ import { Subject, takeUntil, fromEvent } from 'rxjs';
 })
 export class HeaderComponent implements OnInit, OnDestroy {
   private router = inject(Router);
+  private authService = inject(AuthService);
+  private notificationService = inject(NotificationService);
   private destroy$ = new Subject<void>();
 
   // Signals para el estado del componente
-  private sessionData = signal<any>(null);
   private mobileMenuOpen = signal(false);
   private cartItems = signal<any[]>([]);
 
-  // Computed signals
-  isAuthenticated = computed(() => !!this.sessionData());
+  // Usar los signals del AuthService directamente para reactividad completa
+  isAuthenticated = computed(() => this.authService.isAuthenticated());
+  currentUser = computed(() => this.authService.currentUser());
   userName = computed(() => {
-    const session = this.sessionData();
-    return session?.name || session?.fullName || session?.email?.split('@')[0] || 'Usuario';
+    const user = this.currentUser();
+    return user?.name || user?.email?.split('@')[0] || 'Usuario';
   });
   userInitial = computed(() => this.userName().charAt(0).toUpperCase());
   cartCount = computed(() => 
     this.cartItems().reduce((sum: number, item: any) => sum + (item.quantity || 0), 0)
   );
   dashboardRoute = computed(() => {
-    const session = this.sessionData();
-    return session?.role === 'admin' ? '/admin' : '/buyer';
+    const user = this.currentUser();
+    return user?.role === 'admin' ? '/admin/dashboard' : '/buyer/dashboard';
   });
   isMobileMenuOpen = computed(() => this.mobileMenuOpen());
 
   ngOnInit() {
-    this.checkAuthentication();
+    console.log('🚀 [HEADER] Inicializando header...');
     this.loadCartData();
     this.setupStorageListener();
+    
+    // Log inicial del estado de autenticación
+    console.log('🔐 [HEADER] Estado inicial de autenticación:', {
+      isAuthenticated: this.isAuthenticated(),
+      currentUser: this.currentUser()
+    });
+
+    // Monitorear cambios en el estado de autenticación
+    let previousAuth = this.isAuthenticated();
+    let previousUser = this.currentUser();
+    
+    setInterval(() => {
+      const currentAuth = this.isAuthenticated();
+      const currentUserData = this.currentUser();
+      
+      if (currentAuth !== previousAuth || currentUserData !== previousUser) {
+        console.log('🔄 [HEADER] Cambio detectado en autenticación:', {
+          wasAuth: previousAuth,
+          isAuth: currentAuth,
+          previousUser: previousUser?.name,
+          currentUser: currentUserData?.name
+        });
+        
+        previousAuth = currentAuth;
+        previousUser = currentUserData;
+      }
+    }, 500); // Cada 500ms para detectar cambios rápidos
   }
 
   ngOnDestroy() {
     this.destroy$.next();
     this.destroy$.complete();
-  }
-
-  private checkAuthentication() {
-    const session = localStorage.getItem('session');
-    if (!session) {
-      this.sessionData.set(null);
-      return;
-    }
-
-    try {
-      const sessionData = JSON.parse(session);
-      const now = new Date().getTime();
-      const sessionAge = now - sessionData.loginTime;
-      const SESSION_TIMEOUT = 30 * 60 * 1000; // 30 minutos
-
-      if (sessionAge > SESSION_TIMEOUT) {
-        localStorage.removeItem('session');
-        this.sessionData.set(null);
-        return;
-      }
-
-      this.sessionData.set(sessionData);
-    } catch (error) {
-      console.error('Error parsing session:', error);
-      this.sessionData.set(null);
-    }
   }
 
   private loadCartData() {
@@ -281,20 +286,18 @@ export class HeaderComponent implements OnInit, OnDestroy {
   }
 
   private setupStorageListener() {
-    // Escuchar cambios en localStorage
+    // Escuchar cambios en localStorage para el carrito
     fromEvent(window, 'storage')
       .pipe(takeUntil(this.destroy$))
       .subscribe((event: any) => {
-        if (event.key === 'session') {
-          this.checkAuthentication();
-        } else if (event.key === 'cart') {
+        if (event.key === 'cart') {
+          console.log('🛒 [HEADER] Carrito actualizado desde localStorage');
           this.loadCartData();
         }
       });
 
-    // También verificar periódicamente la sesión
+    // Actualizar carrito periódicamente
     setInterval(() => {
-      this.checkAuthentication();
       this.loadCartData();
     }, 60000); // Cada minuto
   }
@@ -311,16 +314,15 @@ export class HeaderComponent implements OnInit, OnDestroy {
     const confirmLogout = confirm('¿Estás seguro de que quieres cerrar sesión?');
     
     if (confirmLogout) {
-      // Limpiar datos de sesión y carrito
-      localStorage.removeItem('session');
-      localStorage.removeItem('currentUser');
+      console.log('🚪 [HEADER] Usuario confirmó logout');
       
-      // Actualizar estado
-      this.sessionData.set(null);
+      // Usar el AuthService para hacer logout
+      this.authService.logout();
       this.closeMobileMenu();
       
-      // Mostrar notificación (se puede mejorar con un servicio de notificaciones)
-      console.log('Sesión cerrada correctamente');
+      // Mostrar notificación
+      this.notificationService.success('Sesión cerrada correctamente');
+      console.log('✅ [HEADER] Logout completado, redirigiendo a home');
       
       // Redirigir a home
       this.router.navigate(['/home']);

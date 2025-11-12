@@ -191,7 +191,7 @@ function strongPasswordValidator(control: AbstractControl): {[key: string]: any}
                   [type]="showPassword ? 'text' : 'password'" 
                   id="password" 
                   formControlName="password"
-                  class="w-full px-4 py-3 pr-12 bg-gray-900 bg-opacity-50 border rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/50 transition-all duration-300"
+                  class="w-full px-4 py-3 pr-14 bg-gray-900 bg-opacity-50 border rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/50 transition-all duration-300"
                   [class.border-purple-500/30]="!registerForm.get('password')?.invalid || !registerForm.get('password')?.touched"
                   [class.border-pink-500]="registerForm.get('password')?.invalid && registerForm.get('password')?.touched"
                   placeholder="Mínimo 6 caracteres"
@@ -199,9 +199,9 @@ function strongPasswordValidator(control: AbstractControl): {[key: string]: any}
                 <button 
                   type="button" 
                   (click)="togglePassword()"
-                  class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-purple-400 transition-colors"
+                  class="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-purple-400 transition-colors flex items-center justify-center w-6 h-6"
                 >
-                  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     @if (showPassword) {
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L12 12l2.122-2.122m-2.122 2.122L9.878 14.12M12 12v.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                     } @else {
@@ -235,7 +235,7 @@ function strongPasswordValidator(control: AbstractControl): {[key: string]: any}
                   [type]="showConfirmPassword ? 'text' : 'password'" 
                   id="confirmPassword" 
                   formControlName="confirmPassword"
-                  class="w-full px-4 py-3 pr-12 bg-gray-900 bg-opacity-50 border rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/50 transition-all duration-300"
+                  class="w-full px-4 py-3 pr-14 bg-gray-900 bg-opacity-50 border rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/50 transition-all duration-300"
                   [class.border-purple-500/30]="!registerForm.get('confirmPassword')?.invalid || !registerForm.get('confirmPassword')?.touched"
                   [class.border-pink-500]="registerForm.get('confirmPassword')?.invalid && registerForm.get('confirmPassword')?.touched"
                   placeholder="Repite tu contraseña"
@@ -243,9 +243,9 @@ function strongPasswordValidator(control: AbstractControl): {[key: string]: any}
                 <button 
                   type="button" 
                   (click)="toggleConfirmPassword()"
-                  class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-purple-400 transition-colors"
+                  class="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-purple-400 transition-colors flex items-center justify-center w-6 h-6"
                 >
-                  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     @if (showConfirmPassword) {
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L12 12l2.122-2.122m-2.122 2.122L9.878 14.12M12 12v.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                     } @else {
@@ -410,16 +410,30 @@ export class RegisterComponent implements OnInit {
   }
 
   async onSubmit(): Promise<void> {
+    console.log('🚀 [REGISTER] Iniciando proceso de registro...');
+    
     if (this.registerForm.invalid) {
+      console.log('❌ [REGISTER] Formulario inválido:', this.registerForm.errors);
       this.markFormGroupTouched();
       this.notificationService.error('Por favor, completa todos los campos correctamente');
       return;
     }
 
     this.isLoading = true;
+    console.log('⏳ [REGISTER] Formulario válido, procesando...');
 
     try {
       const formValue = this.registerForm.value as RegisterFormData;
+      console.log('📝 [REGISTER] Datos del formulario:', {
+        fullName: formValue.fullName,
+        username: formValue.username,
+        email: formValue.email,
+        hasPassword: !!formValue.password,
+        hasConfirmPassword: !!formValue.confirmPassword,
+        passwordsMatch: formValue.password === formValue.confirmPassword,
+        birthdate: formValue.birthdate,
+        hasAddress: !!formValue.address
+      });
       
       // Preparar datos para el registro
       const registerData = {
@@ -429,25 +443,50 @@ export class RegisterComponent implements OnInit {
         confirmPassword: formValue.confirmPassword
       };
       
+      console.log('📤 [REGISTER] Enviando datos al AuthService...');
       const result = await this.authService.register(registerData);
+      console.log('📥 [REGISTER] Respuesta del AuthService:', result);
       
       if (result.success) {
-        // Registro exitoso
+        console.log('✅ [REGISTER] Registro exitoso!');
         this.notificationService.success('¡Cuenta creada exitosamente!');
         
-        // Redirigir al login con parámetro de éxito
-        this.router.navigate(['/login'], { 
-          queryParams: { registered: 'true' } 
+        // Verificar si el usuario quedó autenticado
+        const isAuthenticated = this.authService.isAuthenticated();
+        const currentUser = this.authService.currentUser();
+        console.log('🔐 [REGISTER] Estado de autenticación después del registro:', {
+          isAuthenticated,
+          currentUser: currentUser ? {
+            name: currentUser.name,
+            email: currentUser.email,
+            role: currentUser.role
+          } : null
         });
+        
+        if (isAuthenticated) {
+          console.log('🎯 [REGISTER] Usuario autenticado automáticamente, redirigiendo al dashboard...');
+          
+          // Pequeño delay para asegurar que la UI se actualice
+          setTimeout(() => {
+            this.redirectBasedOnRole();
+          }, 100);
+        } else {
+          console.log('🔄 [REGISTER] Usuario no autenticado, redirigiendo al login...');
+          // Redirigir al login con parámetro de éxito
+          this.router.navigate(['/login'], { 
+            queryParams: { registered: 'true' } 
+          });
+        }
       } else {
-        // Error en el registro
+        console.log('❌ [REGISTER] Error en registro:', result.message);
         this.notificationService.error(result.message || 'Error al crear la cuenta');
       }
     } catch (error) {
-      console.error('Error en registro:', error);
+      console.error('💥 [REGISTER] Error inesperado en registro:', error);
       this.notificationService.error('Error inesperado al crear la cuenta');
     } finally {
       this.isLoading = false;
+      console.log('🏁 [REGISTER] Proceso de registro finalizado');
     }
   }
 
