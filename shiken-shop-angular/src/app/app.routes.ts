@@ -32,12 +32,12 @@ export const routes: Routes = [
     loadComponent: () => import('./components/auth/login.component').then(m => m.LoginComponent),
     title: 'Iniciar Sesión - ShikenShop'
   },
-  // {
-  //   path: 'register', 
-  //   canActivate: [GuestGuard],
-  //   loadComponent: () => import('./pages/register/register.component').then(m => m.RegisterComponent),
-  //   title: 'Registro - ShikenShop'
-  // },
+  {
+    path: 'register', 
+    canActivate: [GuestGuard],
+    loadComponent: () => import('./components/auth/register.component').then(m => m.RegisterComponent),
+    title: 'Registro - ShikenShop'
+  },
 
   // FASE 2: Categorías de juegos - Rutas públicas
   // {
