@@ -293,13 +293,21 @@
             <!-- Name -->
             <div>
               <label class="block text-purple-200 font-medium mb-2">
-                Nombre *
+                Nombre * <span class="text-xs text-slate-400">({{ productForm.get('name')?.value?.length || 0 }}/100)</span>
               </label>
               <input
                 type="text"
                 formControlName="name"
+                (change)="onProductFieldChange('name', $event)"
+                (keydown)="onProductFieldKeyDown('name', $event)"
+                (input)="onProductFieldInput('name', $event)"
+                (blur)="onProductFieldBlur('name')"
+                (focus)="onProductFieldFocus('name')"
+                maxlength="100"
                 class="w-full px-4 py-3 bg-slate-900/50 border border-slate-600 rounded-lg text-white placeholder-purple-300 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all"
-                placeholder="Nombre del juego">
+                [class.border-red-500]="isFieldInvalid('name')"
+                [class.border-green-500]="productForm.get('name')?.valid && productForm.get('name')?.touched"
+                placeholder="Ej: The Legend of Zelda: Breath of the Wild">
               
               <div *ngIf="isFieldInvalid('name')" class="text-red-400 text-sm mt-1">
                 {{ getFieldError('name') }}
@@ -313,7 +321,11 @@
               </label>
               <select
                 formControlName="category"
-                class="w-full px-4 py-3 bg-slate-900/50 border border-slate-600 rounded-lg text-white focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all">
+                (change)="onProductFieldChange('category', $event)"
+                (blur)="onProductFieldBlur('category')"
+                class="w-full px-4 py-3 bg-slate-900/50 border border-slate-600 rounded-lg text-white focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all"
+                [class.border-red-500]="isFieldInvalid('category')"
+                [class.border-green-500]="productForm.get('category')?.valid && productForm.get('category')?.touched">
                 <option value="">Selecciona una categoría</option>
                 <option *ngFor="let category of categories" [value]="category.value">
                   {{ category.label }}
@@ -328,13 +340,19 @@
             <!-- Description -->
             <div>
               <label class="block text-purple-200 font-medium mb-2">
-                Descripción *
+                Descripción * <span class="text-xs text-slate-400">({{ productForm.get('description')?.value?.length || 0 }}/500)</span>
               </label>
               <textarea
                 formControlName="description"
                 rows="3"
+                (input)="onProductFieldInput('description', $event)"
+                (blur)="onProductFieldBlur('description')"
+                (focus)="onProductFieldFocus('description')"
+                maxlength="500"
                 class="w-full px-4 py-3 bg-slate-900/50 border border-slate-600 rounded-lg text-white placeholder-purple-300 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all resize-none"
-                placeholder="Descripción del juego"></textarea>
+                [class.border-red-500]="isFieldInvalid('description')"
+                [class.border-green-500]="productForm.get('description')?.valid && productForm.get('description')?.touched"
+                placeholder="Descripción detallada del juego, características principales, etc."></textarea>
               
               <div *ngIf="isFieldInvalid('description')" class="text-red-400 text-sm mt-1">
                 {{ getFieldError('description') }}
@@ -350,9 +368,16 @@
                 <input
                   type="number"
                   formControlName="price"
+                  (change)="onProductFieldChange('price', $event)"
+                  (keydown)="onProductFieldKeyDown('price', $event)"
+                  (blur)="onProductFieldBlur('price')"
+                  (focus)="onProductFieldFocus('price')"
                   min="0"
+                  max="1000000"
                   step="100"
                   class="w-full px-4 py-3 bg-slate-900/50 border border-slate-600 rounded-lg text-white placeholder-purple-300 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all"
+                  [class.border-red-500]="isFieldInvalid('price')"
+                  [class.border-green-500]="productForm.get('price')?.valid && productForm.get('price')?.touched"
                   placeholder="0">
                 
                 <div *ngIf="isFieldInvalid('price')" class="text-red-400 text-sm mt-1">
@@ -362,19 +387,27 @@
 
               <div>
                 <label class="block text-purple-200 font-medium mb-2">
-                  Descuento (%)
+                  Descuento (%) <span class="text-xs text-slate-400">Opcional</span>
                 </label>
                 <input
                   type="number"
                   formControlName="discount"
+                  (change)="onProductFieldChange('discount', $event)"
+                  (keydown)="onProductFieldKeyDown('discount', $event)"
+                  (blur)="onProductFieldBlur('discount')"
+                  (focus)="onProductFieldFocus('discount')"
                   min="0"
                   max="100"
+                  step="5"
                   class="w-full px-4 py-3 bg-slate-900/50 border border-slate-600 rounded-lg text-white placeholder-purple-300 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all"
+                  [class.border-red-500]="isFieldInvalid('discount')"
+                  [class.border-green-500]="productForm.get('discount')?.valid && productForm.get('discount')?.touched"
                   placeholder="0">
                 
                 <div *ngIf="isFieldInvalid('discount')" class="text-red-400 text-sm mt-1">
                   {{ getFieldError('discount') }}
                 </div>
+                <p class="text-xs text-slate-400 mt-1">Valor entre 0 y 100</p>
               </div>
             </div>
 
@@ -386,29 +419,45 @@
               <input
                 type="number"
                 formControlName="stock"
+                (change)="onProductFieldChange('stock', $event)"
+                (keydown)="onProductFieldKeyDown('stock', $event)"
+                (blur)="onProductFieldBlur('stock')"
+                (focus)="onProductFieldFocus('stock')"
                 min="0"
+                max="9999"
+                step="1"
                 class="w-full px-4 py-3 bg-slate-900/50 border border-slate-600 rounded-lg text-white placeholder-purple-300 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all"
+                [class.border-red-500]="isFieldInvalid('stock')"
+                [class.border-green-500]="productForm.get('stock')?.valid && productForm.get('stock')?.touched"
+                [class.border-yellow-500]="productForm.get('stock')?.value === 0"
                 placeholder="10">
               
               <div *ngIf="isFieldInvalid('stock')" class="text-red-400 text-sm mt-1">
                 {{ getFieldError('stock') }}
               </div>
+              <p class="text-xs text-slate-400 mt-1">Debe ser un número entero positivo</p>
             </div>
 
             <!-- Image URL -->
             <div>
               <label class="block text-purple-200 font-medium mb-2">
-                URL de Imagen
+                URL de Imagen <span class="text-xs text-slate-400">Opcional</span>
               </label>
               <input
                 type="url"
                 formControlName="image"
+                (change)="onProductFieldChange('image', $event)"
+                (blur)="onProductFieldBlur('image')"
+                (focus)="onProductFieldFocus('image')"
                 class="w-full px-4 py-3 bg-slate-900/50 border border-slate-600 rounded-lg text-white placeholder-purple-300 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all"
-                placeholder="https://...">
+                [class.border-red-500]="isFieldInvalid('image')"
+                [class.border-green-500]="productForm.get('image')?.valid && productForm.get('image')?.touched"
+                placeholder="https://ejemplo.com/imagen.jpg">
               
               <div *ngIf="isFieldInvalid('image')" class="text-red-400 text-sm mt-1">
                 {{ getFieldError('image') }}
               </div>
+              <p class="text-xs text-slate-400 mt-1">Debe ser una URL válida comenzando con http:// o https://</p>
             </div>
 
             <!-- Active and Featured Toggles -->

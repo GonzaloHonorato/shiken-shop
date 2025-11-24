@@ -1,11 +1,17 @@
 import { Component, inject, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, FormControl, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { DataService } from '../../services/data.service';
 import { NotificationService } from '../../services/notification.service';
 import { Product, ProductCategoryEnum } from '../../models';
+import { 
+  positiveNumberValidator, 
+  integerValidator, 
+  percentageValidator,
+  productNameValidator 
+} from '../../validators/custom-validators';
 
 // ===================================
 // ADMIN PRODUCTS COMPONENT
@@ -45,17 +51,45 @@ export class AdminProductsComponent implements OnInit {
   });
   readonly editingProduct = signal<Product | null>(null);
 
-  // Product form
+  // Product form con validadores mejorados
   readonly productForm: FormGroup = this.fb.group({
-    name: ['', [Validators.required, Validators.minLength(3)]],
-    category: ['', Validators.required],
-    description: ['', [Validators.required, Validators.minLength(10)]],
-    price: ['', [Validators.required, Validators.min(0)]],
-    discount: [0, [Validators.min(0), Validators.max(100)]],
-    stock: ['', [Validators.required, Validators.min(0)]],
-    image: [''],
-    active: [true],
-    featured: [false]
+    name: new FormControl('', [
+      Validators.required, 
+      Validators.minLength(3),
+      Validators.maxLength(100),
+      Validators.pattern(/^[a-zA-Z0-9\s\-:]+$/), // Solo letras, números, espacios, guiones y dos puntos
+      productNameValidator // Validador personalizado
+    ]),
+    category: new FormControl('', [
+      Validators.required
+    ]),
+    description: new FormControl('', [
+      Validators.required, 
+      Validators.minLength(10),
+      Validators.maxLength(500)
+    ]),
+    price: new FormControl('', [
+      Validators.required,
+      Validators.min(0),
+      Validators.max(1000000),
+      positiveNumberValidator // Validador personalizado
+    ]),
+    discount: new FormControl(0, [
+      Validators.min(0),
+      Validators.max(100),
+      percentageValidator // Validador personalizado
+    ]),
+    stock: new FormControl('', [
+      Validators.required,
+      Validators.min(0),
+      Validators.max(9999),
+      integerValidator // Validador personalizado para números enteros
+    ]),
+    image: new FormControl('', [
+      Validators.pattern(/^https?:\/\/.+/) // Pattern para URL válida
+    ]),
+    active: new FormControl(true),
+    featured: new FormControl(false)
   });
 
   // Filter form
@@ -101,6 +135,32 @@ export class AdminProductsComponent implements OnInit {
     }
 
     this.setupFilterSubscription();
+    this.setupProductFormListeners();
+  }
+
+  // ===================================
+  // LISTENERS DE FORMULARIO DE PRODUCTO
+  // ===================================
+
+  private setupProductFormListeners(): void {
+    // Listener para actualizar precio final cuando cambia precio o descuento
+    this.productForm.get('price')?.valueChanges.subscribe(() => {
+      this.updateFinalPrice();
+    });
+
+    this.productForm.get('discount')?.valueChanges.subscribe(() => {
+      this.updateFinalPrice();
+    });
+  }
+
+  private updateFinalPrice(): void {
+    const price = this.productForm.get('price')?.value;
+    const discount = this.productForm.get('discount')?.value || 0;
+    
+    if (price && discount > 0) {
+      const finalPrice = this.calculateFinalPrice(Number(price), Number(discount));
+      console.log(`💰 Precio: $${price} - Descuento: ${discount}% = Precio Final: $${finalPrice}`);
+    }
   }
 
   // ===================================
@@ -349,6 +409,124 @@ export class AdminProductsComponent implements OnInit {
   }
 
   // ===================================
+  // MANEJO DE EVENTOS MODERNOS DEL FORMULARIO DE PRODUCTO
+  // ===================================
+
+  /**
+   * Evento (change) - Validar y formatear al cambiar
+   */
+  onProductFieldChange(fieldName: string, event: Event): void {
+    const input = event.target as HTMLInputElement;
+    console.log(`📝 Producto - Campo ${fieldName} cambió:`, input.value);
+    
+    // Formatear nombre del producto (capitalizar)
+    if (fieldName === 'name') {
+      const formatted = this.capitalizeProductName(input.value);
+      if (formatted !== input.value) {
+        this.productForm.get('name')?.setValue(formatted, { emitEvent: false });
+      }
+    }
+
+    // Validar que el precio sea un número válido
+    if (fieldName === 'price' && input.value) {
+      const numValue = Number(input.value);
+      if (isNaN(numValue) || numValue < 0) {
+        this.notificationService.warning('El precio debe ser un número positivo');
+      }
+    }
+
+    // Validar que el stock sea un entero
+    if (fieldName === 'stock' && input.value) {
+      const numValue = Number(input.value);
+      if (!Number.isInteger(numValue) || numValue < 0) {
+        this.notificationService.warning('El stock debe ser un número entero positivo');
+      }
+    }
+  }
+
+  /**
+   * Evento (keydown) - Prevenir caracteres no deseados
+   */
+  onProductFieldKeyDown(fieldName: string, event: KeyboardEvent): void {
+    // Prevenir caracteres especiales en el nombre del producto
+    if (fieldName === 'name') {
+      const invalidChars = ['<', '>', '/', '\\', '{', '}', '[', ']'];
+      if (invalidChars.includes(event.key)) {
+        event.preventDefault();
+        return;
+      }
+    }
+
+    // Solo permitir números, punto y teclas de control en campos numéricos
+    if (['price', 'stock', 'discount'].includes(fieldName)) {
+      const isNumber = /^\d$/.test(event.key);
+      const isControlKey = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab'].includes(event.key);
+      const isPeriod = event.key === '.' && fieldName !== 'stock'; // Permitir punto solo en price y discount
+      
+      if (!isNumber && !isControlKey && !isPeriod) {
+        event.preventDefault();
+      }
+    }
+
+    // Submit con Enter (solo si no es textarea)
+    if (event.key === 'Enter' && fieldName !== 'description') {
+      event.preventDefault();
+      this.onSaveProduct();
+    }
+  }
+
+  /**
+   * Evento (input) - Validación en tiempo real
+   */
+  onProductFieldInput(fieldName: string, event: Event): void {
+    const input = event.target as HTMLInputElement;
+    
+    // Limitar longitud de caracteres en tiempo real
+    if (fieldName === 'name' && input.value.length > 100) {
+      input.value = input.value.substring(0, 100);
+      this.productForm.get('name')?.setValue(input.value);
+    }
+
+    if (fieldName === 'description' && input.value.length > 500) {
+      input.value = input.value.substring(0, 500);
+      this.productForm.get('description')?.setValue(input.value);
+    }
+  }
+
+  /**
+   * Evento (blur) - Marcar como touched y validar
+   */
+  onProductFieldBlur(fieldName: string): void {
+    const control = this.productForm.get(fieldName);
+    
+    if (control) {
+      control.markAsTouched();
+      
+      // Validaciones específicas al perder el foco
+      if (fieldName === 'price' && control.value) {
+        const price = Number(control.value);
+        if (price > 0 && price < 100) {
+          console.log('⚠️ Precio bajo detectado');
+        }
+      }
+
+      if (fieldName === 'stock' && control.value) {
+        const stock = Number(control.value);
+        if (stock === 0) {
+          this.notificationService.warning('El producto quedará sin stock');
+        }
+      }
+    }
+  }
+
+  /**
+   * Evento (focus) - Mostrar ayuda contextual
+   */
+  onProductFieldFocus(fieldName: string): void {
+    console.log(`🎯 Foco en campo de producto: ${fieldName}`);
+  }
+
+  // ===================================
   // FORM VALIDATION HELPERS
   // ===================================
 
@@ -362,10 +540,22 @@ export class AdminProductsComponent implements OnInit {
     if (field && field.errors && field.touched) {
       if (field.errors['required']) return `${fieldName} es requerido`;
       if (field.errors['minlength']) return `Mínimo ${field.errors['minlength'].requiredLength} caracteres`;
+      if (field.errors['maxlength']) return `Máximo ${field.errors['maxlength'].requiredLength} caracteres`;
       if (field.errors['min']) return `Valor mínimo: ${field.errors['min'].min}`;
       if (field.errors['max']) return `Valor máximo: ${field.errors['max'].max}`;
+      if (field.errors['pattern']) return `Formato inválido`;
+      if (field.errors['positiveNumber']) return `Debe ser un número positivo`;
+      if (field.errors['integer']) return `Debe ser un número entero`;
+      if (field.errors['percentage']) return `Debe ser un porcentaje entre 0 y 100`;
+      if (field.errors['startsWithNumber']) return `No debe comenzar con un número`;
     }
     return '';
+  }
+
+  private capitalizeProductName(text: string): string {
+    return text.split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(' ');
   }
 
   // ===================================

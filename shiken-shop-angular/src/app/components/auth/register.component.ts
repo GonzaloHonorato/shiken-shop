@@ -1,10 +1,18 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, AbstractControl } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, FormGroup, FormControl, Validators, AbstractControl } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { NotificationService } from '../../services/notification.service';
 import { DataService } from '../../services/data.service';
+import { 
+  passwordMatchValidator, 
+  strongPasswordValidator, 
+  minAgeValidator,
+  usernameValidator,
+  noNumbersValidator,
+  pastDateValidator
+} from '../../validators/custom-validators';
 
 // Interfaz extendida para registro
 interface RegisterFormData {
@@ -15,64 +23,6 @@ interface RegisterFormData {
   confirmPassword: string;
   birthdate: string;
   address?: string;
-}
-
-// Validador personalizado para confirmar contraseña
-function passwordMatchValidator(control: AbstractControl): {[key: string]: any} | null {
-  const password = control.get('password');
-  const confirmPassword = control.get('confirmPassword');
-  
-  if (!password || !confirmPassword) {
-    return null;
-  }
-  
-  return password.value === confirmPassword.value ? null : { passwordMismatch: true };
-}
-
-// Validador personalizado para edad mínima
-function minAgeValidator(minAge: number) {
-  return (control: AbstractControl): {[key: string]: any} | null => {
-    if (!control.value) return null;
-    
-    const birthDate = new Date(control.value);
-    const today = new Date();
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const monthDiff = today.getMonth() - birthDate.getMonth();
-    
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-      age--;
-    }
-    
-    return age >= minAge ? null : { minAge: { requiredAge: minAge, actualAge: age } };
-  };
-}
-
-// Validador personalizado para contraseña fuerte
-function strongPasswordValidator(control: AbstractControl): {[key: string]: any} | null {
-  if (!control.value) return null;
-  
-  const password = control.value;
-  const hasUpperCase = /[A-Z]/.test(password);
-  const hasLowerCase = /[a-z]/.test(password);
-  const hasNumber = /\d/.test(password);
-  const minLength = password.length >= 6;
-  const maxLength = password.length <= 18;
-  
-  const valid = hasUpperCase && hasLowerCase && hasNumber && minLength && maxLength;
-  
-  if (!valid) {
-    return {
-      strongPassword: {
-        hasUpperCase,
-        hasLowerCase,
-        hasNumber,
-        minLength,
-        maxLength
-      }
-    };
-  }
-  
-  return null;
 }
 
 @Component({
@@ -106,10 +56,15 @@ function strongPasswordValidator(control: AbstractControl): {[key: string]: any}
                 type="text" 
                 id="fullName" 
                 formControlName="fullName"
+                (change)="onFieldChange('fullName', $event)"
+                (keydown)="onKeyDown('fullName', $event)"
+                (blur)="onFieldBlur('fullName')"
+                (focus)="onFieldFocus('fullName')"
                 class="w-full px-4 py-3 bg-gray-900 bg-opacity-50 border rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/50 transition-all duration-300"
                 [class.border-purple-500/30]="!registerForm.get('fullName')?.invalid || !registerForm.get('fullName')?.touched"
                 [class.border-pink-500]="registerForm.get('fullName')?.invalid && registerForm.get('fullName')?.touched"
                 placeholder="Ingresa tu nombre completo"
+                autocomplete="name"
               >
               <span 
                 class="error-message text-pink-500 text-sm mt-1"
@@ -121,6 +76,12 @@ function strongPasswordValidator(control: AbstractControl): {[key: string]: any}
                 @if (registerForm.get('fullName')?.hasError('minlength')) {
                   El nombre debe tener al menos 2 caracteres
                 }
+                @if (registerForm.get('fullName')?.hasError('maxlength')) {
+                  El nombre no puede exceder 50 caracteres
+                }
+                @if (registerForm.get('fullName')?.hasError('noNumbers')) {
+                  El nombre no puede contener números
+                }
               </span>
             </div>
 
@@ -129,15 +90,27 @@ function strongPasswordValidator(control: AbstractControl): {[key: string]: any}
               <label for="username" class="block text-white font-semibold mb-2">
                 Nombre de Usuario <span class="text-pink-500">*</span>
               </label>
-              <input 
-                type="text" 
-                id="username" 
-                formControlName="username"
-                class="w-full px-4 py-3 bg-gray-900 bg-opacity-50 border rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/50 transition-all duration-300"
-                [class.border-purple-500/30]="!registerForm.get('username')?.invalid || !registerForm.get('username')?.touched"
-                [class.border-pink-500]="registerForm.get('username')?.invalid && registerForm.get('username')?.touched"
-                placeholder="Elige un nombre de usuario"
-              >
+              <div class="relative">
+                <input 
+                  type="text" 
+                  id="username" 
+                  formControlName="username"
+                  (change)="onFieldChange('username', $event)"
+                  (keydown)="onKeyDown('username', $event)"
+                  (input)="onInputChange('username', $event)"
+                  (blur)="onFieldBlur('username')"
+                  (focus)="onFieldFocus('username')"
+                  class="w-full px-4 py-3 bg-gray-900 bg-opacity-50 border rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/50 transition-all duration-300"
+                  [class.border-purple-500/30]="!registerForm.get('username')?.invalid || !registerForm.get('username')?.touched"
+                  [class.border-pink-500]="registerForm.get('username')?.invalid && registerForm.get('username')?.touched"
+                  placeholder="Elige un nombre de usuario"
+                  autocomplete="username"
+                  maxlength="20"
+                >
+                <span class="absolute right-3 top-3 text-xs text-gray-400">
+                  {{ usernameLength }}/20
+                </span>
+              </div>
               <span 
                 class="error-message text-pink-500 text-sm mt-1"
                 [class.hidden]="!registerForm.get('username')?.invalid || !registerForm.get('username')?.touched"
@@ -148,10 +121,14 @@ function strongPasswordValidator(control: AbstractControl): {[key: string]: any}
                 @if (registerForm.get('username')?.hasError('minlength')) {
                   El nombre de usuario debe tener al menos 3 caracteres
                 }
-                @if (registerForm.get('username')?.hasError('pattern')) {
+                @if (registerForm.get('username')?.hasError('maxlength')) {
+                  El nombre de usuario no puede exceder 20 caracteres
+                }
+                @if (registerForm.get('username')?.hasError('pattern') || registerForm.get('username')?.hasError('invalidUsername')) {
                   Solo se permiten letras, números y guiones bajos
                 }
               </span>
+              <p class="text-gray-400 text-xs mt-1">Solo letras, números y guiones bajos. Sin espacios.</p>
             </div>
 
             <!-- Correo Electrónico -->
@@ -159,15 +136,27 @@ function strongPasswordValidator(control: AbstractControl): {[key: string]: any}
               <label for="email" class="block text-white font-semibold mb-2">
                 Correo Electrónico <span class="text-pink-500">*</span>
               </label>
-              <input 
-                type="email" 
-                id="email" 
-                formControlName="email"
-                class="w-full px-4 py-3 bg-gray-900 bg-opacity-50 border rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/50 transition-all duration-300"
-                [class.border-purple-500/30]="!registerForm.get('email')?.invalid || !registerForm.get('email')?.touched"
-                [class.border-pink-500]="registerForm.get('email')?.invalid && registerForm.get('email')?.touched"
-                placeholder="tu@email.com"
-              >
+              <div class="relative">
+                <input 
+                  type="email" 
+                  id="email" 
+                  formControlName="email"
+                  (change)="onFieldChange('email', $event)"
+                  (blur)="onFieldBlur('email')"
+                  (focus)="onFieldFocus('email')"
+                  class="w-full px-4 py-3 bg-gray-900 bg-opacity-50 border rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/50 transition-all duration-300"
+                  [class.border-purple-500/30]="!registerForm.get('email')?.invalid || !registerForm.get('email')?.touched"
+                  [class.border-pink-500]="registerForm.get('email')?.invalid && registerForm.get('email')?.touched"
+                  [class.border-green-500]="registerForm.get('email')?.valid && registerForm.get('email')?.touched"
+                  placeholder="tu@email.com"
+                  autocomplete="email"
+                >
+                @if (emailTyping) {
+                  <span class="absolute right-3 top-3 text-xs text-purple-400">
+                    ⌨️ Escribiendo...
+                  </span>
+                }
+              </div>
               <span 
                 class="error-message text-pink-500 text-sm mt-1"
                 [class.hidden]="!registerForm.get('email')?.invalid || !registerForm.get('email')?.touched"
@@ -175,8 +164,8 @@ function strongPasswordValidator(control: AbstractControl): {[key: string]: any}
                 @if (registerForm.get('email')?.hasError('required')) {
                   El correo electrónico es requerido
                 }
-                @if (registerForm.get('email')?.hasError('email')) {
-                  Ingresa un correo electrónico válido
+                @if (registerForm.get('email')?.hasError('email') || registerForm.get('email')?.hasError('pattern')) {
+                  Ingresa un correo electrónico válido (ejemplo: usuario@dominio.com)
                 }
               </span>
             </div>
@@ -191,10 +180,16 @@ function strongPasswordValidator(control: AbstractControl): {[key: string]: any}
                   [type]="showPassword ? 'text' : 'password'" 
                   id="password" 
                   formControlName="password"
+                  (change)="onFieldChange('password', $event)"
+                  (blur)="onFieldBlur('password')"
+                  (focus)="onFieldFocus('password')"
                   class="w-full px-4 py-3 pr-14 bg-gray-900 bg-opacity-50 border rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/50 transition-all duration-300"
                   [class.border-purple-500/30]="!registerForm.get('password')?.invalid || !registerForm.get('password')?.touched"
                   [class.border-pink-500]="registerForm.get('password')?.invalid && registerForm.get('password')?.touched"
                   placeholder="Mínimo 6 caracteres"
+                  autocomplete="new-password"
+                  minlength="6"
+                  maxlength="18"
                 >
                 <button 
                   type="button" 
@@ -211,6 +206,28 @@ function strongPasswordValidator(control: AbstractControl): {[key: string]: any}
                   </svg>
                 </button>
               </div>
+              
+              <!-- Indicador de fortaleza de contraseña -->
+              @if (registerForm.get('password')?.value) {
+                <div class="mt-2">
+                  <div class="flex justify-between items-center mb-1">
+                    <span class="text-xs text-gray-400">Fortaleza:</span>
+                    <span class="text-xs font-semibold" [class.text-red-400]="passwordStrength < 30"
+                          [class.text-yellow-400]="passwordStrength >= 30 && passwordStrength < 60"
+                          [class.text-blue-400]="passwordStrength >= 60 && passwordStrength < 80"
+                          [class.text-green-400]="passwordStrength >= 80">
+                      {{ getPasswordStrengthLabel() }}
+                    </span>
+                  </div>
+                  <div class="w-full bg-gray-700 rounded-full h-2">
+                    <div class="h-2 rounded-full transition-all duration-300"
+                         [class]="getPasswordStrengthColor()"
+                         [style.width.%]="passwordStrength">
+                    </div>
+                  </div>
+                </div>
+              }
+              
               <span 
                 class="error-message text-pink-500 text-sm mt-1"
                 [class.hidden]="!registerForm.get('password')?.invalid || !registerForm.get('password')?.touched"
@@ -218,8 +235,14 @@ function strongPasswordValidator(control: AbstractControl): {[key: string]: any}
                 @if (registerForm.get('password')?.hasError('required')) {
                   La contraseña es requerida
                 }
+                @if (registerForm.get('password')?.hasError('minlength')) {
+                  La contraseña debe tener al menos 6 caracteres
+                }
+                @if (registerForm.get('password')?.hasError('maxlength')) {
+                  La contraseña no puede exceder 18 caracteres
+                }
                 @if (registerForm.get('password')?.hasError('strongPassword')) {
-                  La contraseña debe contener mayúsculas, minúsculas, números (6-18 caracteres)
+                  La contraseña debe contener mayúsculas, minúsculas y números
                 }
               </span>
               <p class="text-gray-400 text-xs mt-1">Debe contener 6-18 caracteres, al menos un número y una letra mayúscula</p>
@@ -280,9 +303,13 @@ function strongPasswordValidator(control: AbstractControl): {[key: string]: any}
                 type="date" 
                 id="birthdate" 
                 formControlName="birthdate"
+                (change)="onFieldChange('birthdate', $event)"
+                (blur)="onFieldBlur('birthdate')"
                 class="w-full px-4 py-3 bg-gray-900 bg-opacity-50 border rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/50 transition-all duration-300"
                 [class.border-purple-500/30]="!registerForm.get('birthdate')?.invalid || !registerForm.get('birthdate')?.touched"
                 [class.border-pink-500]="registerForm.get('birthdate')?.invalid && registerForm.get('birthdate')?.touched"
+                [max]="getCurrentDate()"
+                autocomplete="bday"
               >
               <span 
                 class="error-message text-pink-500 text-sm mt-1"
@@ -293,6 +320,9 @@ function strongPasswordValidator(control: AbstractControl): {[key: string]: any}
                 }
                 @if (registerForm.get('birthdate')?.hasError('minAge')) {
                   Debes tener al menos 13 años para registrarte
+                }
+                @if (registerForm.get('birthdate')?.hasError('pastDate')) {
+                  La fecha de nacimiento debe ser en el pasado
                 }
               </span>
               <p class="text-gray-400 text-xs mt-1">Debes tener al menos 13 años para registrarte</p>
@@ -373,17 +403,56 @@ export class RegisterComponent implements OnInit {
   isLoading = false;
   showPassword = false;
   showConfirmPassword = false;
+  
+  // Contadores de caracteres para feedback en tiempo real
+  usernameLength = 0;
+  passwordStrength = 0;
+  emailTyping = false;
 
   constructor() {
+    // Construir formulario con FormBuilder y validadores múltiples
     this.registerForm = this.formBuilder.group({
-      fullName: ['', [Validators.required, Validators.minLength(2)]],
-      username: ['', [Validators.required, Validators.minLength(3), Validators.pattern(/^[a-zA-Z0-9_]+$/)]],
-      email: ['', [Validators.required, Validators.email]],
-      password: ['', [Validators.required, strongPasswordValidator]],
-      confirmPassword: ['', [Validators.required]],
-      birthdate: ['', [Validators.required, minAgeValidator(13)]],
-      address: [''] // Optional field
-    }, { validators: passwordMatchValidator });
+      fullName: new FormControl('', [
+        Validators.required, 
+        Validators.minLength(2),
+        Validators.maxLength(50),
+        noNumbersValidator // Validador personalizado: no permite números en el nombre
+      ]),
+      username: new FormControl('', [
+        Validators.required, 
+        Validators.minLength(3),
+        Validators.maxLength(20),
+        Validators.pattern(/^[a-zA-Z0-9_]+$/), // Pattern: solo letras, números y guion bajo
+        usernameValidator // Validador personalizado adicional
+      ]),
+      email: new FormControl('', [
+        Validators.required, 
+        Validators.email,
+        Validators.pattern(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/) // Pattern más estricto para email
+      ]),
+      password: new FormControl('', [
+        Validators.required,
+        Validators.minLength(6),
+        Validators.maxLength(18),
+        strongPasswordValidator // Validador personalizado para contraseña fuerte
+      ]),
+      confirmPassword: new FormControl('', [
+        Validators.required
+      ]),
+      birthdate: new FormControl('', [
+        Validators.required, 
+        minAgeValidator(13), // Validador personalizado de edad mínima
+        pastDateValidator // Validador personalizado: fecha debe ser en el pasado
+      ]),
+      address: new FormControl('', [
+        Validators.maxLength(200)
+      ]) // Campo opcional con límite de caracteres
+    }, { 
+      validators: passwordMatchValidator // Validador a nivel de FormGroup
+    });
+
+    // Suscribirse a cambios para feedback en tiempo real
+    this.setupFormListeners();
   }
 
   ngOnInit(): void {
@@ -396,6 +465,128 @@ export class RegisterComponent implements OnInit {
     }
   }
 
+  // ===================================
+  // CONFIGURACIÓN DE LISTENERS DE EVENTOS
+  // ===================================
+
+  private setupFormListeners(): void {
+    // Listener para username - actualizar longitud en tiempo real
+    this.registerForm.get('username')?.valueChanges.subscribe(value => {
+      this.usernameLength = value ? value.length : 0;
+    });
+
+    // Listener para password - calcular fortaleza en tiempo real
+    this.registerForm.get('password')?.valueChanges.subscribe(value => {
+      this.passwordStrength = this.calculatePasswordStrength(value);
+    });
+
+    // Listener para email - detectar cuando está escribiendo
+    this.registerForm.get('email')?.valueChanges.subscribe(() => {
+      this.emailTyping = true;
+      setTimeout(() => this.emailTyping = false, 1000);
+    });
+  }
+
+  // ===================================
+  // MANEJO DE EVENTOS MODERNOS
+  // ===================================
+
+  /**
+   * Evento (change) - Se dispara cuando el valor del input cambia y pierde el foco
+   * Útil para validaciones que no necesitan ser en tiempo real
+   */
+  onFieldChange(fieldName: string, event: Event): void {
+    const input = event.target as HTMLInputElement;
+    console.log(`📝 Campo ${fieldName} cambió:`, input.value);
+    
+    // Ejemplo: Formatear el nombre con capitalize
+    if (fieldName === 'fullName') {
+      const formatted = this.capitalizeWords(input.value);
+      this.registerForm.get('fullName')?.setValue(formatted, { emitEvent: false });
+    }
+
+    // Ejemplo: Convertir username a minúsculas automáticamente
+    if (fieldName === 'username') {
+      const lowercase = input.value.toLowerCase();
+      if (input.value !== lowercase) {
+        this.registerForm.get('username')?.setValue(lowercase, { emitEvent: false });
+      }
+    }
+  }
+
+  /**
+   * Evento (keydown) - Se dispara cada vez que se presiona una tecla
+   * Útil para prevenir caracteres no deseados o atajos de teclado
+   */
+  onKeyDown(fieldName: string, event: KeyboardEvent): void {
+    // Prevenir espacios en username
+    if (fieldName === 'username' && event.key === ' ') {
+      event.preventDefault();
+      this.notificationService.warning('El nombre de usuario no puede contener espacios');
+      return;
+    }
+
+    // Prevenir números en el nombre completo
+    if (fieldName === 'fullName' && /\d/.test(event.key) && event.key.length === 1) {
+      event.preventDefault();
+      return;
+    }
+
+    // Detectar Enter para enviar formulario
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault();
+      this.onSubmit();
+    }
+  }
+
+  /**
+   * Evento (input) - Se dispara en tiempo real mientras se escribe
+   * Usado para validaciones inmediatas y feedback instantáneo
+   */
+  onInputChange(fieldName: string, event: Event): void {
+    const input = event.target as HTMLInputElement;
+    
+    // Mostrar feedback inmediato de longitud
+    if (fieldName === 'username') {
+      this.usernameLength = input.value.length;
+    }
+  }
+
+  /**
+   * Evento (blur) - Se dispara cuando el campo pierde el foco
+   * Útil para marcar el campo como touched y mostrar errores
+   */
+  onFieldBlur(fieldName: string): void {
+    const control = this.registerForm.get(fieldName);
+    
+    if (control) {
+      control.markAsTouched();
+      
+      // Validación adicional al perder el foco
+      if (fieldName === 'email' && control.value) {
+        console.log('✉️ Validando email:', control.value);
+        // Aquí podrías agregar validación asíncrona para verificar si el email ya existe
+      }
+    }
+  }
+
+  /**
+   * Evento (focus) - Se dispara cuando el campo obtiene el foco
+   * Útil para mostrar ayudas o tips
+   */
+  onFieldFocus(fieldName: string): void {
+    console.log(`🎯 Foco en campo: ${fieldName}`);
+    
+    // Ejemplo: mostrar tooltip con requisitos de contraseña
+    if (fieldName === 'password') {
+      // Se podría mostrar un tooltip aquí
+    }
+  }
+
+  // ===================================
+  // MÉTODOS DE UTILIDAD
+  // ===================================
+
   togglePassword(): void {
     this.showPassword = !this.showPassword;
   }
@@ -406,7 +597,52 @@ export class RegisterComponent implements OnInit {
 
   clearForm(): void {
     this.registerForm.reset();
+    this.usernameLength = 0;
+    this.passwordStrength = 0;
     this.notificationService.info('Formulario limpiado');
+  }
+
+  private capitalizeWords(text: string): string {
+    return text.split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(' ');
+  }
+
+  private calculatePasswordStrength(password: string): number {
+    if (!password) return 0;
+    
+    let strength = 0;
+    
+    // Longitud
+    if (password.length >= 6) strength += 20;
+    if (password.length >= 10) strength += 20;
+    if (password.length >= 14) strength += 10;
+    
+    // Complejidad
+    if (/[a-z]/.test(password)) strength += 10;
+    if (/[A-Z]/.test(password)) strength += 15;
+    if (/\d/.test(password)) strength += 15;
+    if (/[!@#$%^&*(),.?":{}|<>]/.test(password)) strength += 10;
+    
+    return Math.min(strength, 100);
+  }
+
+  getPasswordStrengthLabel(): string {
+    if (this.passwordStrength < 30) return 'Débil';
+    if (this.passwordStrength < 60) return 'Media';
+    if (this.passwordStrength < 80) return 'Fuerte';
+    return 'Muy fuerte';
+  }
+
+  getPasswordStrengthColor(): string {
+    if (this.passwordStrength < 30) return 'bg-red-500';
+    if (this.passwordStrength < 60) return 'bg-yellow-500';
+    if (this.passwordStrength < 80) return 'bg-blue-500';
+    return 'bg-green-500';
+  }
+
+  getCurrentDate(): string {
+    return new Date().toISOString().split('T')[0];
   }
 
   async onSubmit(): Promise<void> {

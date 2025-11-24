@@ -1,6 +1,6 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, FormGroup, FormControl, Validators } from '@angular/forms';
 import { Router, ActivatedRoute, RouterModule } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { NotificationService } from '../../services/notification.service';
@@ -51,11 +51,18 @@ import { LoginCredentials } from '../../models';
                   type="text" 
                   id="identifier" 
                   formControlName="identifier"
+                  (change)="onFieldChange('identifier', $event)"
+                  (keydown)="onFieldKeyDown('identifier', $event)"
+                  (blur)="onFieldBlur('identifier')"
+                  (focus)="onFieldFocus('identifier')"
                   class="input-field w-full pl-10 pr-4 py-3 bg-gray-900/50 border rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all"
                   [class.border-gray-700]="!loginForm.get('identifier')?.invalid || !loginForm.get('identifier')?.touched"
                   [class.border-red-500]="loginForm.get('identifier')?.invalid && loginForm.get('identifier')?.touched"
+                  [class.border-green-500]="loginForm.get('identifier')?.valid && loginForm.get('identifier')?.touched"
                   placeholder="correo@ejemplo.com o usuario"
                   autocomplete="username"
+                  minlength="3"
+                  maxlength="100"
                 >
               </div>
               <span 
@@ -65,8 +72,11 @@ import { LoginCredentials } from '../../models';
                 @if (loginForm.get('identifier')?.hasError('required')) {
                   El email o usuario es requerido
                 }
-                @if (loginForm.get('identifier')?.hasError('email')) {
-                  Formato de email inválido
+                @if (loginForm.get('identifier')?.hasError('minlength')) {
+                  Debe tener al menos 3 caracteres
+                }
+                @if (loginForm.get('identifier')?.hasError('pattern')) {
+                  Solo se permiten letras, números y @._+-
                 }
               </span>
             </div>
@@ -86,11 +96,17 @@ import { LoginCredentials } from '../../models';
                   [type]="showPassword ? 'text' : 'password'" 
                   id="password" 
                   formControlName="password"
+                  (keydown)="onFieldKeyDown('password', $event)"
+                  (blur)="onFieldBlur('password')"
+                  (focus)="onFieldFocus('password')"
                   class="input-field w-full pl-10 pr-12 py-3 bg-gray-900/50 border rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all"
                   [class.border-gray-700]="!loginForm.get('password')?.invalid || !loginForm.get('password')?.touched"
                   [class.border-red-500]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched"
+                  [class.border-green-500]="loginForm.get('password')?.valid && loginForm.get('password')?.touched"
                   placeholder="••••••••"
                   autocomplete="current-password"
+                  minlength="6"
+                  maxlength="50"
                 >
                 <button 
                   type="button" 
@@ -116,6 +132,9 @@ import { LoginCredentials } from '../../models';
                 }
                 @if (loginForm.get('password')?.hasError('minlength')) {
                   La contraseña debe tener al menos 6 caracteres
+                }
+                @if (loginForm.get('password')?.hasError('maxlength')) {
+                  La contraseña no puede exceder 50 caracteres
                 }
               </span>
             </div>
@@ -220,12 +239,24 @@ export class LoginComponent implements OnInit {
   isLoading = false;
   showPassword = false;
   returnUrl = '/';
+  loginAttempts = 0;
 
   constructor() {
+    // Construir formulario con FormControl y validadores mejorados
     this.loginForm = this.formBuilder.group({
-      identifier: ['', [Validators.required]],
-      password: ['', [Validators.required, Validators.minLength(6)]],
-      rememberMe: [false]
+      identifier: new FormControl('', [
+        Validators.required,
+        Validators.minLength(3),
+        Validators.maxLength(100),
+        // Validar que sea email O username (solo letras, números y algunos caracteres)
+        Validators.pattern(/^[a-zA-Z0-9@._+-]+$/)
+      ]),
+      password: new FormControl('', [
+        Validators.required,
+        Validators.minLength(6),
+        Validators.maxLength(50)
+      ]),
+      rememberMe: new FormControl(false)
     });
   }
 
@@ -250,6 +281,57 @@ export class LoginComponent implements OnInit {
     }
   }
 
+  // ===================================
+  // MANEJO DE EVENTOS MODERNOS
+  // ===================================
+
+  /**
+   * Evento (change) - Formatear y validar al cambiar
+   */
+  onFieldChange(fieldName: string, event: Event): void {
+    const input = event.target as HTMLInputElement;
+    
+    // Convertir identifier a minúsculas si parece un email
+    if (fieldName === 'identifier' && input.value.includes('@')) {
+      const lowercase = input.value.toLowerCase().trim();
+      if (lowercase !== input.value) {
+        this.loginForm.get('identifier')?.setValue(lowercase, { emitEvent: false });
+      }
+    }
+  }
+
+  /**
+   * Evento (keydown) - Prevenir caracteres no válidos
+   */
+  onFieldKeyDown(fieldName: string, event: KeyboardEvent): void {
+    // Prevenir espacios en el identifier
+    if (fieldName === 'identifier' && event.key === ' ') {
+      event.preventDefault();
+      return;
+    }
+
+    // Submit con Enter
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      this.onSubmit();
+    }
+  }
+
+  /**
+   * Evento (blur) - Marcar como touched
+   */
+  onFieldBlur(fieldName: string): void {
+    const control = this.loginForm.get(fieldName);
+    control?.markAsTouched();
+  }
+
+  /**
+   * Evento (focus) - Limpiar errores previos
+   */
+  onFieldFocus(fieldName: string): void {
+    // Podría usarse para mostrar hints o limpiar errores
+  }
+
   togglePassword(): void {
     this.showPassword = !this.showPassword;
   }
@@ -257,10 +339,12 @@ export class LoginComponent implements OnInit {
   async onSubmit(): Promise<void> {
     if (this.loginForm.invalid) {
       this.markFormGroupTouched();
+      this.notificationService.warning('Por favor completa todos los campos correctamente');
       return;
     }
 
     this.isLoading = true;
+    this.loginAttempts++;
 
     try {
       const { identifier, password, rememberMe } = this.loginForm.value;
@@ -274,7 +358,10 @@ export class LoginComponent implements OnInit {
       const result = await this.authService.login(credentials, rememberMe);
       
       if (result.success) {
-        // Login exitoso - obtener usuario actual
+        // Login exitoso - resetear intentos
+        this.loginAttempts = 0;
+        
+        // Obtener usuario actual
         const currentUser = this.authService.currentUser();
         this.notificationService.success(`¡Bienvenido, ${currentUser?.name || 'Usuario'}!`);
         
@@ -285,8 +372,17 @@ export class LoginComponent implements OnInit {
           this.redirectBasedOnRole();
         }
       } else {
-        // Error de login
-        this.notificationService.error(result.message || 'Error al iniciar sesión');
+        // Error de login - mostrar mensaje con contador de intentos
+        const attemptsMsg = this.loginAttempts >= 3 
+          ? ` (${this.loginAttempts} intentos fallidos)` 
+          : '';
+        this.notificationService.error((result.message || 'Error al iniciar sesión') + attemptsMsg);
+        
+        // Limpiar contraseña después de 3 intentos fallidos
+        if (this.loginAttempts >= 3) {
+          this.loginForm.get('password')?.reset();
+          this.notificationService.warning('Por seguridad, la contraseña ha sido limpiada');
+        }
       }
     } catch (error) {
       console.error('Error en login:', error);
