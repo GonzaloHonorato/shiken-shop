@@ -1,11 +1,21 @@
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { ReactiveFormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
+import { Directive, Input } from '@angular/core';
 import { of } from 'rxjs';
 import { LoginComponent } from './login.component';
 import { AuthService } from '../../services/auth.service';
 import { NotificationService } from '../../services/notification.service';
 import { DataService } from '../../services/data.service';
+
+// Stub directive para RouterLink
+@Directive({
+  selector: '[routerLink]',
+  standalone: true
+})
+class RouterLinkStubDirective {
+  @Input() routerLink: any;
+}
 
 // ===================================
 // LOGIN COMPONENT - UNIT TESTS
@@ -39,16 +49,21 @@ describe('LoginComponent', () => {
     ]);
     const dataServiceSpy = jasmine.createSpyObj('DataService', ['users']);
     const routerSpy = jasmine.createSpyObj('Router', ['navigate']);
-    const activatedRouteSpy = jasmine.createSpyObj('ActivatedRoute', [], {
-      queryParams: of({ registered: 'true' })
-    });
+    
+    // Mock completo de ActivatedRoute con snapshot
+    const activatedRouteSpy = {
+      snapshot: {
+        queryParams: {}
+      },
+      queryParams: of({})
+    };
 
     authServiceSpy.isAuthenticated.and.returnValue(false);
     authServiceSpy.currentUser.and.returnValue(null);
     dataServiceSpy.users.and.returnValue([]);
 
     await TestBed.configureTestingModule({
-      imports: [LoginComponent, ReactiveFormsModule],
+      imports: [LoginComponent, ReactiveFormsModule, RouterLinkStubDirective],
       providers: [
         { provide: AuthService, useValue: authServiceSpy },
         { provide: NotificationService, useValue: notificationServiceSpy },

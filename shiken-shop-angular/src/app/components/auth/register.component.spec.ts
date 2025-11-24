@@ -1,10 +1,20 @@
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { Directive, Input } from '@angular/core';
 import { RegisterComponent } from './register.component';
 import { AuthService } from '../../services/auth.service';
 import { NotificationService } from '../../services/notification.service';
 import { DataService } from '../../services/data.service';
+
+// Stub directive para RouterLink
+@Directive({
+  selector: '[routerLink]',
+  standalone: true
+})
+class RouterLinkStubDirective {
+  @Input() routerLink: any;
+}
 
 // ===================================
 // REGISTER COMPONENT - UNIT TESTS
@@ -45,7 +55,7 @@ describe('RegisterComponent', () => {
     dataServiceSpy.users.and.returnValue([]);
 
     await TestBed.configureTestingModule({
-      imports: [RegisterComponent, ReactiveFormsModule],
+      imports: [RegisterComponent, ReactiveFormsModule, RouterLinkStubDirective],
       providers: [
         { provide: AuthService, useValue: authServiceSpy },
         { provide: NotificationService, useValue: notificationServiceSpy },
