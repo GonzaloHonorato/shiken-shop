@@ -510,7 +510,7 @@ export class AdminProductsComponent implements OnInit {
         }
       }
 
-      if (fieldName === 'stock' && control.value) {
+      if (fieldName === 'stock' && control.value !== null && control.value !== undefined && control.value !== '') {
         const stock = Number(control.value);
         if (stock === 0) {
           this.notificationService.warning('El producto quedará sin stock');

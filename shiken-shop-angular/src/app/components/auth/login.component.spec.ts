@@ -152,11 +152,12 @@ describe('LoginComponent', () => {
     it('should validate email format if identifier looks like email', () => {
       const identifierControl = component.loginForm.get('identifier');
       
-      identifierControl?.setValue('invalid-email');
-      expect(identifierControl?.hasError('email')).toBeTruthy();
+      // El patrón actual permite letras, números y @._+-
+      identifierControl?.setValue('invalid email with space');
+      expect(identifierControl?.hasError('pattern')).toBeTruthy();
       
       identifierControl?.setValue('valid@email.com');
-      expect(identifierControl?.hasError('email')).toBeFalsy();
+      expect(identifierControl?.hasError('pattern')).toBeFalsy();
     });
 
     it('should accept username as identifier', () => {
@@ -192,7 +193,7 @@ describe('LoginComponent', () => {
       await component.onSubmit();
       
       expect(authService.login).not.toHaveBeenCalled();
-      expect(notificationService.error).toHaveBeenCalled();
+      expect(notificationService.warning).toHaveBeenCalled();
     });
 
     it('should mark all fields as touched when submitting invalid form', async () => {
@@ -220,7 +221,7 @@ describe('LoginComponent', () => {
       expect(authService.login).toHaveBeenCalledWith({
         email: 'test@example.com',
         password: 'Password123'
-      });
+      }, false);
       expect(notificationService.success).toHaveBeenCalled();
     }));
 

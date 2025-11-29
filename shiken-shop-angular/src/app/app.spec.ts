@@ -2,16 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { Component } from '@angular/core';
 import { App } from './app';
-
-// Stub components para el testing
-@Component({ selector: 'app-header', template: '', standalone: true })
-class HeaderStubComponent {}
-
-@Component({ selector: 'app-footer', template: '', standalone: true })
-class FooterStubComponent {}
-
-@Component({ selector: 'app-notification', template: '', standalone: true })
-class NotificationStubComponent {}
+import { NO_ERRORS_SCHEMA } from '@angular/core';
 
 describe('App', () => {
   beforeEach(async () => {
@@ -19,19 +10,8 @@ describe('App', () => {
       imports: [App],
       providers: [
         provideRouter([]) // Proveedor de router para componentes standalone
-      ]
-    })
-    .overrideComponent(App, {
-      remove: { 
-        imports: [] 
-      },
-      add: { 
-        imports: [
-          HeaderStubComponent,
-          FooterStubComponent,
-          NotificationStubComponent
-        ]
-      }
+      ],
+      schemas: [NO_ERRORS_SCHEMA] // Ignorar componentes hijos desconocidos
     })
     .compileComponents();
   });

@@ -23,13 +23,13 @@ describe('AdminProductsComponent', () => {
   const mockProduct: Product = {
     id: '1',
     name: 'Test Game',
-    description: 'Test Description',
+    description: 'Test Description with sufficient length for validation',
     category: ProductCategoryEnum.ACCION,
     price: 50000,
     originalPrice: 50000,
     discount: 0,
     stock: 10,
-    image: 'test.jpg',
+    image: 'https://example.com/test.jpg',
     active: true,
     featured: false,
     rating: 4.5,
@@ -494,16 +494,18 @@ describe('AdminProductsComponent', () => {
   // ===================================
 
   describe('Product Filtering', () => {
-    const products: Product[] = [
+    const filterProducts: Product[] = [
       { ...mockProduct, id: '1', name: 'Action Game', category: ProductCategoryEnum.ACCION, stock: 10 },
       { ...mockProduct, id: '2', name: 'RPG Game', category: ProductCategoryEnum.RPG, stock: 0 },
       { ...mockProduct, id: '3', name: 'Strategy Game', category: ProductCategoryEnum.ESTRATEGIA, stock: 5 }
     ];
 
     beforeEach(() => {
+      // Crear un nuevo signal con los productos de filtro
+      const productsSignal = signal(filterProducts);
       Object.defineProperty(dataService, 'products', {
-        value: () => signal(products),
-        writable: true
+        get: () => productsSignal,
+        configurable: true
       });
       fixture = TestBed.createComponent(AdminProductsComponent);
       component = fixture.componentInstance;
