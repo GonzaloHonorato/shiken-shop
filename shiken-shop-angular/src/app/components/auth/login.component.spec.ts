@@ -1,21 +1,12 @@
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { ReactiveFormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
-import { Directive, Input } from '@angular/core';
-import { of } from 'rxjs';
+import { RouterTestingModule } from '@angular/router/testing';
+import { of, Subject } from 'rxjs';
 import { LoginComponent } from './login.component';
 import { AuthService } from '../../services/auth.service';
 import { NotificationService } from '../../services/notification.service';
 import { DataService } from '../../services/data.service';
-
-// Stub directive para RouterLink
-@Directive({
-  selector: '[routerLink]',
-  standalone: true
-})
-class RouterLinkStubDirective {
-  @Input() routerLink: any;
-}
 
 // ===================================
 // LOGIN COMPONENT - UNIT TESTS
@@ -50,7 +41,9 @@ describe('LoginComponent', () => {
     const dataServiceSpy = jasmine.createSpyObj('DataService', ['users']);
     
     // CORREGIDO: Mock completo del Router con todos los métodos necesarios
-    const routerSpy = jasmine.createSpyObj('Router', ['navigate', 'createUrlTree', 'serializeUrl']);
+    const routerSpy = jasmine.createSpyObj('Router', ['navigate', 'createUrlTree', 'serializeUrl'], {
+      events: new Subject()
+    });
     routerSpy.createUrlTree.and.returnValue({} as any);
     routerSpy.serializeUrl.and.returnValue('/mocked-url');
     
@@ -67,7 +60,7 @@ describe('LoginComponent', () => {
     dataServiceSpy.users.and.returnValue([]);
 
     await TestBed.configureTestingModule({
-      imports: [LoginComponent, ReactiveFormsModule, RouterLinkStubDirective],
+      imports: [LoginComponent, ReactiveFormsModule],
       providers: [
         { provide: AuthService, useValue: authServiceSpy },
         { provide: NotificationService, useValue: notificationServiceSpy },

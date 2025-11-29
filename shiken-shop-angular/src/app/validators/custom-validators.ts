@@ -223,7 +223,11 @@ export function matchFieldValidator(fieldName: string): ValidatorFn {
 export function pastDateValidator(control: AbstractControl): ValidationErrors | null {
   if (!control.value) return null;
   
-  const inputDate = new Date(control.value);
+  // Parsear la fecha de entrada de manera segura (evitar problemas de zona horaria)
+  const dateParts = control.value.split('-');
+  const inputDate = new Date(parseInt(dateParts[0]), parseInt(dateParts[1]) - 1, parseInt(dateParts[2]));
+  inputDate.setHours(0, 0, 0, 0);
+  
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   
@@ -240,7 +244,11 @@ export function pastDateValidator(control: AbstractControl): ValidationErrors | 
 export function futureDateValidator(control: AbstractControl): ValidationErrors | null {
   if (!control.value) return null;
   
-  const inputDate = new Date(control.value);
+  // Parsear la fecha de entrada de manera segura (evitar problemas de zona horaria)
+  const dateParts = control.value.split('-');
+  const inputDate = new Date(parseInt(dateParts[0]), parseInt(dateParts[1]) - 1, parseInt(dateParts[2]));
+  inputDate.setHours(0, 0, 0, 0);
+  
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   
