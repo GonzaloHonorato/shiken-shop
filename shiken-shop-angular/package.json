@@ -6,7 +6,11 @@
     "start": "ng serve",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
-    "test": "ng test"
+    "test": "ng test",
+    "docs": "npm run docs:compodoc && npm run docs:jsdoc",
+    "docs:compodoc": "compodoc -p tsconfig.json -d documentation/compodoc --theme material",
+    "docs:compodoc:serve": "compodoc -p tsconfig.json -s -d documentation/compodoc --theme material",
+    "docs:jsdoc": "jsdoc -c jsdoc.json"
   },
   "prettier": {
     "printWidth": 100,
@@ -37,9 +41,12 @@
     "@angular/build": "^20.3.9",
     "@angular/cli": "^20.3.9",
     "@angular/compiler-cli": "^20.3.0",
+    "@compodoc/compodoc": "^1.1.32",
     "@types/jasmine": "~5.1.0",
     "autoprefixer": "^10.4.22",
+    "docdash": "^2.0.2",
     "jasmine-core": "~5.9.0",
+    "jsdoc": "^4.0.5",
     "karma": "~6.4.0",
     "karma-chrome-launcher": "~3.2.0",
     "karma-coverage": "~2.2.0",

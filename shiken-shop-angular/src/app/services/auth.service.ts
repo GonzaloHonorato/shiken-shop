@@ -7,6 +7,36 @@ import { NotificationService } from './notification.service';
 // ===================================
 // AUTH CONFIGURATION
 // ===================================
+
+/**
+ * @description
+ * Interface de configuración para el servicio de autenticación.
+ * Define parámetros de seguridad y comportamiento del sistema de login.
+ * 
+ * @interface AuthConfig
+ * 
+ * @property {number} sessionTimeout - Tiempo en milisegundos antes de que expire una sesión por inactividad
+ * @property {number} maxLoginAttempts - Número máximo de intentos de login fallidos antes de bloquear
+ * @property {number} lockoutTime - Tiempo en milisegundos que dura el bloqueo de cuenta
+ * @property {string} loginUrl - URL a la que redirigir cuando se necesita autenticación
+ * @property {string} unauthorizedUrl - URL a la que redirigir cuando hay acceso no autorizado
+ * 
+ * @usageNotes
+ * - sessionTimeout afecta tanto a sesiones con "recordarme" como sin él
+ * - El bloqueo por intentos fallidos es temporal y se almacena en localStorage
+ * - Las URLs deben ser rutas válidas de la aplicación Angular
+ * 
+ * @example
+ * ```typescript
+ * const customConfig: AuthConfig = {
+ *   sessionTimeout: 60 * 60 * 1000, // 1 hora
+ *   maxLoginAttempts: 3,
+ *   lockoutTime: 30 * 60 * 1000, // 30 minutos
+ *   loginUrl: '/auth/login',
+ *   unauthorizedUrl: '/403'
+ * };
+ * ```
+ */
 export interface AuthConfig {
   sessionTimeout: number;
   maxLoginAttempts: number;
@@ -15,6 +45,14 @@ export interface AuthConfig {
   unauthorizedUrl: string;
 }
 
+/**
+ * @description
+ * Configuración por defecto del servicio de autenticación.
+ * Establece valores estándar de seguridad para el sistema.
+ * 
+ * @constant
+ * @type {AuthConfig}
+ */
 const DEFAULT_AUTH_CONFIG: AuthConfig = {
   sessionTimeout: 30 * 60 * 1000, // 30 minutos
   maxLoginAttempts: 5,
@@ -26,6 +64,48 @@ const DEFAULT_AUTH_CONFIG: AuthConfig = {
 // ===================================
 // SESSION DATA INTERFACE
 // ===================================
+
+/**
+ * @description
+ * Interface que representa los datos completos de una sesión de usuario activa.
+ * Contiene toda la información necesaria para mantener y validar una sesión.
+ * Se almacena en localStorage cuando el usuario selecciona "recordarme".
+ * 
+ * @interface SessionData
+ * 
+ * @property {boolean} isLoggedIn - Indica si hay una sesión activa
+ * @property {number} userId - ID numérico del usuario (índice en array de usuarios)
+ * @property {string} username - Nombre de usuario para identificación
+ * @property {string} email - Email del usuario
+ * @property {string} name - Nombre de display del usuario
+ * @property {string} fullName - Nombre completo del usuario
+ * @property {UserRole} role - Rol del usuario (admin o buyer)
+ * @property {string} token - Token de sesión (simulado en esta implementación)
+ * @property {number} loginTime - Timestamp en milisegundos del momento de login
+ * @property {boolean} rememberMe - Si la sesión debe persistir después de cerrar el navegador
+ * 
+ * @usageNotes
+ * - Solo se guarda en localStorage si rememberMe es true
+ * - El loginTime se usa para calcular timeout de sesión
+ * - No contiene información sensible como contraseñas
+ * - Se valida en cada carga de la aplicación
+ * 
+ * @example
+ * ```typescript
+ * const sessionData: SessionData = {
+ *   isLoggedIn: true,
+ *   userId: 0,
+ *   username: 'admin',
+ *   email: 'admin@shiken.com',
+ *   name: 'Admin',
+ *   fullName: 'Administrador del Sistema',
+ *   role: UserRole.ADMIN,
+ *   token: 'session-token-12345',
+ *   loginTime: Date.now(),
+ *   rememberMe: true
+ * };
+ * ```
+ */
 export interface SessionData {
   isLoggedIn: boolean;
   userId: number;
@@ -39,6 +119,75 @@ export interface SessionData {
   rememberMe: boolean;
 }
 
+/**
+ * @description
+ * Servicio de autenticación centralizado que gestiona todo el ciclo de vida de sesiones de usuario.
+ * Proporciona funcionalidades de login, logout, registro, validación de sesiones y control de acceso.
+ * Implementa manejo de estado reactivo mediante Angular signals y RxJS observables para máxima flexibilidad.
+ * Incluye características de seguridad como timeout de sesión, límite de intentos de login y bloqueo temporal.
+ * 
+ * @class AuthService
+ * @injectable
+ * 
+ * @usageNotes
+ * - El servicio se proporciona en 'root' y es singleton en toda la aplicación
+ * - Las sesiones expiran después de 30 minutos de inactividad por defecto
+ * - Después de 5 intentos fallidos de login, la cuenta se bloquea por 15 minutos
+ * - Soporta persistencia de sesión con "recordarme" mediante localStorage
+ * - Emite cambios de estado mediante signals (reactivo) y observables (para código legacy)
+ * - Se integra automáticamente con guards para protección de rutas
+ * - Detecta actividad del usuario (clicks, teclas, movimiento) para resetear el timer de inactividad
+ * 
+ * @example
+ * ```typescript
+ * // Inyección en componente
+ * constructor(private authService: AuthService) {
+ *   // Verificar autenticación con signal
+ *   if (this.authService.isAuthenticated()) {
+ *     console.log('Usuario:', this.authService.currentUser()?.name);
+ *   }
+ * }
+ * ```
+ * 
+ * @example
+ * ```typescript
+ * // Login de usuario
+ * async onLogin() {
+ *   const result = await this.authService.login({
+ *     email: this.email,
+ *     password: this.password
+ *   }, this.rememberMe);
+ *   
+ *   if (result.success) {
+ *     this.router.navigate(['/dashboard']);
+ *   } else {
+ *     console.error(result.message);
+ *   }
+ * }
+ * ```
+ * 
+ * @example
+ * ```typescript
+ * // Suscripción a cambios de estado (observable)
+ * this.authService.authState$.subscribe(state => {
+ *   if (state.isAuthenticated) {
+ *     console.log('Usuario logueado:', state.user?.name);
+ *   } else {
+ *     console.log('Usuario no autenticado');
+ *   }
+ * });
+ * ```
+ * 
+ * @example
+ * ```typescript
+ * // Verificar roles con computed signals
+ * if (this.authService.isAdmin()) {
+ *   // Mostrar funcionalidades de administrador
+ * } else if (this.authService.isBuyer()) {
+ *   // Mostrar funcionalidades de comprador
+ * }
+ * ```
+ */
 @Injectable({
   providedIn: 'root'
 })
@@ -98,6 +247,69 @@ export class AuthService {
   // AUTHENTICATION METHODS
   // ===================================
   
+  /**
+   * @description
+   * Autentica un usuario con sus credenciales (email/username y contraseña).
+   * Valida las credenciales contra los usuarios almacenados, aplica límite de intentos fallidos,
+   * crea una sesión activa y actualiza el estado de autenticación en toda la aplicación.
+   * 
+   * @async
+   * @param {LoginCredentials} credentials - Objeto con email/username y password del usuario
+   * @param {boolean} [rememberMe=false] - Si es true, persiste la sesión en localStorage
+   * 
+   * @returns {Promise<{success: boolean, message: string}>} Objeto con resultado de la operación
+   *   - success: true si login exitoso, false si falló
+   *   - message: Mensaje descriptivo del resultado (éxito o error)
+   * 
+   * @usageNotes
+   * - Se puede usar email o username en el campo credentials.email
+   * - Después de 5 intentos fallidos, la cuenta se bloquea por 15 minutos
+   * - Solo usuarios con active=true pueden hacer login
+   * - Si rememberMe es false, la sesión solo dura hasta cerrar el navegador
+   * - Si rememberMe es true, la sesión persiste hasta que expire por timeout o logout manual
+   * - El método es asíncrono pero actualmente no hace llamadas HTTP (datos en localStorage)
+   * - En producción, las contraseñas deberían estar hasheadas
+   * 
+   * @example
+   * ```typescript
+   * // Login básico sin recordar sesión
+   * const result = await this.authService.login({
+   *   email: 'user@example.com',
+   *   password: 'myPassword123'
+   * });
+   * 
+   * if (result.success) {
+   *   console.log('Login exitoso!');
+   *   this.router.navigate(['/dashboard']);
+   * } else {
+   *   this.showError(result.message);
+   * }
+   * ```
+   * 
+   * @example
+   * ```typescript
+   * // Login con "recordarme" activado
+   * const result = await this.authService.login({
+   *   email: 'admin@shiken.com',
+   *   password: 'admin123'
+   * }, true);
+   * 
+   * if (result.success) {
+   *   // La sesión persistirá después de cerrar el navegador
+   *   console.log(result.message); // "¡Bienvenido, Admin!"
+   * }
+   * ```
+   * 
+   * @example
+   * ```typescript
+   * // Manejo de cuenta bloqueada
+   * const result = await this.authService.login(credentials);
+   * if (!result.success && result.message.includes('bloqueada')) {
+   *   // Usuario ha excedido intentos, esperar 15 minutos
+   *   this.showBlockedAccountWarning();
+   * }
+   * ```
+   */
   async login(credentials: LoginCredentials, rememberMe = false): Promise<{ success: boolean; message: string }> {
     try {
       // Verificar si la cuenta está bloqueada
@@ -147,6 +359,77 @@ export class AuthService {
     }
   }
   
+  /**
+   * @description
+   * Registra un nuevo usuario en el sistema creando una cuenta con rol de comprador (buyer).
+   * Valida que el email no exista, verifica que las contraseñas coincidan, crea el usuario
+   * y lo almacena en localStorage. El usuario queda activo inmediatamente después del registro.
+   * 
+   * @async
+   * @param {RegisterData} registerData - Datos del nuevo usuario a registrar
+   *   - name: Nombre del usuario
+   *   - email: Email único (se valida que no exista)
+   *   - password: Contraseña del usuario
+   *   - confirmPassword: Confirmación de la contraseña (debe coincidir)
+   * 
+   * @returns {Promise<{success: boolean, message: string}>} Objeto con resultado del registro
+   *   - success: true si registro exitoso, false si falló
+   *   - message: Mensaje descriptivo del resultado
+   * 
+   * @usageNotes
+   * - Los usuarios registrados obtienen automáticamente el rol 'buyer'
+   * - El email debe ser único en el sistema (case-sensitive)
+   * - Las contraseñas deben coincidir exactamente
+   * - En producción, la contraseña debe hashearse antes de almacenar
+   * - El usuario queda activo (active: true) inmediatamente
+   * - Se asigna la fecha actual como registeredAt
+   * - Después de un registro exitoso, el usuario aún debe hacer login
+   * 
+   * @example
+   * ```typescript
+   * // Registro básico de nuevo usuario
+   * const registerData: RegisterData = {
+   *   name: 'Juan Pérez',
+   *   email: 'juan@example.com',
+   *   password: 'securePass123',
+   *   confirmPassword: 'securePass123'
+   * };
+   * 
+   * const result = await this.authService.register(registerData);
+   * 
+   * if (result.success) {
+   *   console.log('Cuenta creada exitosamente');
+   *   this.router.navigate(['/login']);
+   * } else {
+   *   this.showError(result.message);
+   * }
+   * ```
+   * 
+   * @example
+   * ```typescript
+   * // Manejo de email duplicado
+   * const result = await this.authService.register(data);
+   * if (!result.success && result.message.includes('ya existe')) {
+   *   this.showEmailExistsError();
+   *   this.suggestLogin();
+   * }
+   * ```
+   * 
+   * @example
+   * ```typescript
+   * // Validación de contraseñas no coincidentes
+   * const result = await this.authService.register({
+   *   name: 'Usuario',
+   *   email: 'user@test.com',
+   *   password: 'pass123',
+   *   confirmPassword: 'pass456' // No coinciden
+   * });
+   * 
+   * if (!result.success) {
+   *   console.log(result.message); // "Las contraseñas no coinciden."
+   * }
+   * ```
+   */
   async register(registerData: RegisterData): Promise<{ success: boolean; message: string }> {
     try {
       console.log('🔧 [AUTH-SERVICE] Iniciando proceso de registro...', {
