@@ -48,7 +48,11 @@ describe('LoginComponent', () => {
       'info'
     ]);
     const dataServiceSpy = jasmine.createSpyObj('DataService', ['users']);
-    const routerSpy = jasmine.createSpyObj('Router', ['navigate']);
+    
+    // CORREGIDO: Mock completo del Router con todos los métodos necesarios
+    const routerSpy = jasmine.createSpyObj('Router', ['navigate', 'createUrlTree', 'serializeUrl']);
+    routerSpy.createUrlTree.and.returnValue({} as any);
+    routerSpy.serializeUrl.and.returnValue('/mocked-url');
     
     // Mock completo de ActivatedRoute con snapshot
     const activatedRouteSpy = {

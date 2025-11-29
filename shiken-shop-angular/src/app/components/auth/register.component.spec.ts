@@ -1,7 +1,8 @@
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { ReactiveFormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { Directive, Input } from '@angular/core';
+import { of } from 'rxjs';
 import { RegisterComponent } from './register.component';
 import { AuthService } from '../../services/auth.service';
 import { NotificationService } from '../../services/notification.service';
@@ -47,7 +48,19 @@ describe('RegisterComponent', () => {
       'info'
     ]);
     const dataServiceSpy = jasmine.createSpyObj('DataService', ['users']);
-    const routerSpy = jasmine.createSpyObj('Router', ['navigate']);
+    
+    // CORREGIDO: Mock completo del Router con todos los métodos necesarios
+    const routerSpy = jasmine.createSpyObj('Router', ['navigate', 'createUrlTree', 'serializeUrl']);
+    routerSpy.createUrlTree.and.returnValue({} as any);
+    routerSpy.serializeUrl.and.returnValue('/mocked-url');
+    
+    // AGREGADO: Mock de ActivatedRoute
+    const activatedRouteSpy = {
+      snapshot: {
+        queryParams: {}
+      },
+      queryParams: of({})
+    };
 
     // Configurar valores por defecto para los spies
     authServiceSpy.isAuthenticated.and.returnValue(false);
@@ -60,7 +73,8 @@ describe('RegisterComponent', () => {
         { provide: AuthService, useValue: authServiceSpy },
         { provide: NotificationService, useValue: notificationServiceSpy },
         { provide: DataService, useValue: dataServiceSpy },
-        { provide: Router, useValue: routerSpy }
+        { provide: Router, useValue: routerSpy },
+        { provide: ActivatedRoute, useValue: activatedRouteSpy }
       ]
     }).compileComponents();
 

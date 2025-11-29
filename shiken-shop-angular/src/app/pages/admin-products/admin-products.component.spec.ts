@@ -64,7 +64,11 @@ describe('AdminProductsComponent', () => {
       'warning',
       'info'
     ]);
-    const routerSpy = jasmine.createSpyObj('Router', ['navigate']);
+    
+    // CORREGIDO: Mock completo del Router con todos los métodos necesarios
+    const routerSpy = jasmine.createSpyObj('Router', ['navigate', 'createUrlTree', 'serializeUrl']);
+    routerSpy.createUrlTree.and.returnValue({} as any);
+    routerSpy.serializeUrl.and.returnValue('/mocked-url');
 
     authServiceSpy.isAdmin.and.returnValue(true);
     authServiceSpy.currentUser.and.returnValue({
@@ -73,9 +77,10 @@ describe('AdminProductsComponent', () => {
       email: 'admin@test.com',
       role: 'admin'
     } as any);
-    // products() es un computed signal que retorna el array
+    
+    // CORREGIDO: products debe ser un signal que retorna el array directamente
     Object.defineProperty(dataServiceSpy, 'products', {
-      value: () => signal([mockProduct])
+      get: () => signal([mockProduct])
     });
 
     await TestBed.configureTestingModule({

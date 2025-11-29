@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { RouterOutlet } from '@angular/router';
+import { provideRouter } from '@angular/router';
 import { Component } from '@angular/core';
 import { App } from './app';
 
@@ -13,24 +13,23 @@ class FooterStubComponent {}
 @Component({ selector: 'app-notification', template: '', standalone: true })
 class NotificationStubComponent {}
 
-@Component({ selector: 'router-outlet', template: '', standalone: true })
-class RouterOutletStubComponent {}
-
 describe('App', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [App]
+      imports: [App],
+      providers: [
+        provideRouter([]) // Proveedor de router para componentes standalone
+      ]
     })
     .overrideComponent(App, {
       remove: { 
-        imports: [RouterOutlet] 
+        imports: [] 
       },
       add: { 
         imports: [
           HeaderStubComponent,
           FooterStubComponent,
-          NotificationStubComponent,
-          RouterOutletStubComponent
+          NotificationStubComponent
         ]
       }
     })
