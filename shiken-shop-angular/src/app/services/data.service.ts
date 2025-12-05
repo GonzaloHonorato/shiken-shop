@@ -27,6 +27,23 @@ const DEFAULT_DATA_CONFIG: DataConfig = {
   version: '1.0.0'
 };
 
+// ===================================
+// CHEAPSHARK API INTERFACE
+// ===================================
+/**
+ * Interface para la respuesta de la API de CheapShark
+ * https://www.cheapshark.com/api/1.0/games
+ */
+interface CheapSharkGame {
+  gameID: string;
+  steamAppID: string | null;
+  cheapest: string;
+  cheapestDealID: string;
+  external: string;
+  internalName: string;
+  thumb: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -75,6 +92,10 @@ export class DataService {
   public readonly orders$ = this.ordersSubject.asObservable();
   public readonly cart$ = this.cartSubject.asObservable();
 
+  // Flag para indicar si los datos están listos
+  private dataReadySignal = signal<boolean>(false);
+  public readonly dataReady = this.dataReadySignal.asReadonly();
+
   constructor() {
     this.initializeData();
   }
@@ -83,353 +104,272 @@ export class DataService {
   // INITIALIZATION
   // ===================================
   
-  public initializeData(): void {
+  public async initializeData(): Promise<void> {
     console.log('🚀 Inicializando datos de ShikenShop...');
     
     const dataVersion = localStorage.getItem('dataVersion');
     
     // Si no existe versión o se fuerza reset
     if (!dataVersion || this.config.forceReset) {
-      console.log('📦 Creando datos iniciales...');
+      console.log('📦 Cargando datos iniciales desde archivos JSON...');
       
-      this.initializeUsers();
-      this.initializeProducts();
-      this.initializeOrders();
-      this.initializeCart();
-      
-      // Guardar versión
-      localStorage.setItem('dataVersion', this.config.version);
-      console.log('✨ Datos inicializados correctamente');
+      try {
+        await this.initializeUsersFromJson();
+        await this.initializeProductsFromJson();
+        await this.initializeOrdersFromJson();
+        this.initializeCart();
+        
+        // Cargar datos desde localStorage primero
+        this.loadAllData();
+        
+        // Inyectar productos desde CheapShark API (categoría Aventura)
+        console.log('🎮 Inyectando productos desde CheapShark API...');
+        await this.injectProductsFromCheapShark('mario', ProductCategoryEnum.AVENTURA);
+        
+        // Guardar versión
+        localStorage.setItem('dataVersion', this.config.version);
+        console.log('✨ Datos cargados desde JSON y API correctamente');
+      } catch (error) {
+        console.error('❌ Error cargando datos:', error);
+      }
     } else {
       console.log('ℹ️ Datos ya inicializados (versión ' + dataVersion + ')');
     }
     
     // Cargar datos desde localStorage
     this.loadAllData();
+    this.dataReadySignal.set(true);
     this.displayStats();
   }
 
-  private initializeUsers(): void {
+  /**
+   * Carga usuarios desde el archivo JSON externo
+   */
+  private async initializeUsersFromJson(): Promise<void> {
     if (!localStorage.getItem(StorageKeys.USERS) || this.config.forceReset) {
-      const defaultUsers: User[] = [
-        {
-          name: 'Administrador Principal',
-          email: 'admin@shikenshop.com',
-          password: 'Admin123',
-          role: UserRole.ADMIN,
-          active: true,
-          registeredAt: new Date('2024-01-01').toISOString()
-        },
-        {
-          name: 'Juan Pérez',
-          email: 'comprador@test.com',
-          password: 'Comprador123',
-          role: UserRole.BUYER,
-          active: true,
-          registeredAt: new Date('2024-06-15').toISOString()
-        },
-        {
-          name: 'María Gómez',
-          email: 'maria.gomez@test.com',
-          password: 'Maria123',
-          role: UserRole.BUYER,
-          active: true,
-          registeredAt: new Date('2024-09-10').toISOString()
-        },
-        {
-          name: 'Carlos Rodríguez',
-          email: 'carlos.rodriguez@test.com',
-          password: 'Carlos123',
-          role: UserRole.BUYER,
-          active: true,
-          registeredAt: new Date('2024-08-20').toISOString()
-        },
-        {
-          name: 'Ana Silva',
-          email: 'ana.silva@test.com',
-          password: 'Ana123',
-          role: UserRole.BUYER,
-          active: true,
-          registeredAt: new Date('2024-10-05').toISOString()
+      try {
+        const response = await fetch('/data/users.json');
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
         }
-      ];
-      
-      localStorage.setItem(StorageKeys.USERS, JSON.stringify(defaultUsers));
-      console.log(`✅ ${defaultUsers.length} usuarios creados`);
+        const usersData: User[] = await response.json();
+        
+        // Mapear roles del JSON a UserRole enum
+        const defaultUsers: User[] = usersData.map(user => ({
+          ...user,
+          role: user.role === 'admin' ? UserRole.ADMIN : UserRole.BUYER
+        }));
+        
+        localStorage.setItem(StorageKeys.USERS, JSON.stringify(defaultUsers));
+        console.log(`✅ ${defaultUsers.length} usuarios cargados desde users.json`);
+      } catch (error) {
+        console.error('❌ Error cargando users.json:', error);
+        throw error;
+      }
     }
   }
 
-  private initializeProducts(): void {
+  /**
+   * Carga productos desde el archivo JSON externo
+   */
+  private async initializeProductsFromJson(): Promise<void> {
     if (!localStorage.getItem(StorageKeys.PRODUCTS) || this.config.forceReset) {
-      const defaultProducts: Product[] = [
-        // ACCIÓN
-        {
-          id: 'accion-1',
-          name: 'Cyberpunk Fury',
-          description: 'Explora una metrópolis futurista llena de peligros y secretos oscuros en este RPG de acción cyberpunk.',
-          category: ProductCategoryEnum.ACCION,
-          price: 44990,
-          originalPrice: 59990,
-          discount: 25,
-          stock: 150,
-          image: 'https://images.unsplash.com/photo-1538481199705-c710c4e965fc?w=400',
-          active: true,
-          featured: true,
-          rating: 4.8,
-          reviews: 1250,
-          releaseDate: '2024-03-15',
-          developer: 'CyberGames Studio',
-          platform: ['PC', 'PS5', 'Xbox Series X'],
-          tags: ['Cyberpunk', 'Open World', 'RPG'],
-          createdAt: new Date('2024-03-01').toISOString(),
-          updatedAt: new Date().toISOString()
-        },
-        {
-          id: 'accion-2',
-          name: 'Warzone Elite',
-          description: 'Únete al campo de batalla en este shooter táctico multijugador con gráficos ultra realistas.',
-          category: ProductCategoryEnum.ACCION,
-          price: 39990,
-          originalPrice: 39990,
-          discount: 0,
-          stock: 200,
-          image: 'https://images.unsplash.com/photo-1552820728-8b83bb6b773f?w=400',
-          active: true,
-          featured: false,
-          rating: 4.5,
-          reviews: 890,
-          releaseDate: '2024-05-20',
-          developer: 'TacticalForce',
-          platform: ['PC', 'PS5', 'Xbox Series X'],
-          tags: ['FPS', 'Multiplayer', 'Tactical'],
-          createdAt: new Date('2024-05-01').toISOString(),
-          updatedAt: new Date().toISOString()
-        },
-        {
-          id: 'accion-3',
-          name: 'Street Fighter Revolution',
-          description: 'La próxima evolución de la legendaria saga de lucha con nuevos personajes y mecánicas.',
-          category: ProductCategoryEnum.ACCION,
-          price: 50990,
-          originalPrice: 59990,
-          discount: 15,
-          stock: 100,
-          image: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=400',
-          active: true,
-          featured: true,
-          rating: 4.9,
-          reviews: 2100,
-          releaseDate: '2024-02-10',
-          developer: 'Capcom',
-          platform: ['PC', 'PS5', 'Xbox Series X', 'Switch'],
-          tags: ['Fighting', 'Competitive', '2D'],
-          createdAt: new Date('2024-02-01').toISOString(),
-          updatedAt: new Date().toISOString()
-        },
-        // RPG
-        {
-          id: 'rpg-1',
-          name: 'Dragon\'s Quest Legends',
-          description: 'Embárcate en una épica aventura medieval donde tus decisiones moldean el destino del reino.',
-          category: ProductCategoryEnum.RPG,
-          price: 54990,
-          originalPrice: 54990,
-          discount: 0,
-          stock: 120,
-          image: 'https://images.unsplash.com/photo-1518791841217-8f162f1e1131?w=400',
-          active: true,
-          featured: true,
-          rating: 4.7,
-          reviews: 1580,
-          releaseDate: '2024-04-05',
-          developer: 'FantasyWorks',
-          platform: ['PC', 'PS5', 'Xbox Series X'],
-          tags: ['Medieval', 'Open World', 'Story-Rich'],
-          createdAt: new Date('2024-04-01').toISOString(),
-          updatedAt: new Date().toISOString()
-        },
-        {
-          id: 'rpg-2',
-          name: 'Mystic Chronicles',
-          description: 'Un RPG de mundo abierto con un sistema de magia único y combates por turnos estratégicos.',
-          category: ProductCategoryEnum.RPG,
-          price: 48990,
-          originalPrice: 64990,
-          discount: 25,
-          stock: 90,
-          image: 'https://images.unsplash.com/photo-1542736667-069246bdbc6d?w=400',
-          active: true,
-          featured: false,
-          rating: 4.6,
-          reviews: 1120,
-          releaseDate: '2024-06-12',
-          developer: 'MysticSoft',
-          platform: ['PC', 'PS5'],
-          tags: ['Turn-Based', 'Magic', 'Fantasy'],
-          createdAt: new Date('2024-06-01').toISOString(),
-          updatedAt: new Date().toISOString()
-        },
-        {
-          id: 'rpg-3',
-          name: 'Skybound Odyssey',
-          description: 'Vuela por los cielos en dirigibles y explora islas flotantes en este RPG de aventuras aéreas.',
-          category: ProductCategoryEnum.RPG,
-          price: 51990,
-          originalPrice: 59990,
-          discount: 13,
-          stock: 75,
-          image: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400',
-          active: true,
-          featured: true,
-          rating: 4.8,
-          reviews: 1890,
-          releaseDate: '2024-03-28',
-          developer: 'SkyForge Studios',
-          platform: ['PC', 'PS5', 'Xbox Series X', 'Switch'],
-          tags: ['Exploration', 'Flying', 'Adventure'],
-          createdAt: new Date('2024-03-15').toISOString(),
-          updatedAt: new Date().toISOString()
-        },
-        // ESTRATEGIA
-        {
-          id: 'estrategia-1',
-          name: 'Civilization Empire',
-          description: 'Construye tu imperio desde la edad de piedra hasta la era espacial en este juego de estrategia por turnos.',
-          category: ProductCategoryEnum.ESTRATEGIA,
-          price: 47990,
-          originalPrice: 47990,
-          discount: 0,
-          stock: 110,
-          image: 'https://images.unsplash.com/photo-1611996575749-79a3a250f948?w=400',
-          active: true,
-          featured: true,
-          rating: 4.7,
-          reviews: 2450,
-          releaseDate: '2024-02-14',
-          developer: 'Firaxis Games',
-          platform: ['PC'],
-          tags: ['Turn-Based', 'Historical', 'Empire Building'],
-          createdAt: new Date('2024-02-01').toISOString(),
-          updatedAt: new Date().toISOString()
-        },
-        {
-          id: 'estrategia-2',
-          name: 'StarCraft Genesis',
-          description: 'Comanda flotas espaciales en batallas épicas de estrategia en tiempo real.',
-          category: ProductCategoryEnum.ESTRATEGIA,
-          price: 42990,
-          originalPrice: 49990,
-          discount: 14,
-          stock: 95,
-          image: 'https://images.unsplash.com/photo-1446776877081-d282a0f896e2?w=400',
-          active: true,
-          featured: false,
-          rating: 4.8,
-          reviews: 1780,
-          releaseDate: '2024-05-08',
-          developer: 'Blizzard Entertainment',
-          platform: ['PC'],
-          tags: ['RTS', 'Sci-Fi', 'Multiplayer'],
-          createdAt: new Date('2024-05-01').toISOString(),
-          updatedAt: new Date().toISOString()
-        },
-        {
-          id: 'estrategia-3',
-          name: 'Total War Kingdoms',
-          description: 'Conquista territorios y libra batallas masivas en este juego de estrategia medieval.',
-          category: ProductCategoryEnum.ESTRATEGIA,
-          price: 45990,
-          originalPrice: 59990,
-          discount: 23,
-          stock: 80,
-          image: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400',
-          active: true,
-          featured: true,
-          rating: 4.6,
-          reviews: 1340,
-          releaseDate: '2024-04-18',
-          developer: 'Creative Assembly',
-          platform: ['PC'],
-          tags: ['Medieval', 'War', 'Tactical'],
-          createdAt: new Date('2024-04-01').toISOString(),
-          updatedAt: new Date().toISOString()
-        },
-        // AVENTURA
-        {
-          id: 'aventura-1',
-          name: 'The Last Explorer',
-          description: 'Explora ruinas antiguas y descubre civilizaciones perdidas en este juego de aventura narrativa.',
-          category: ProductCategoryEnum.AVENTURA,
-          price: 52990,
-          originalPrice: 52990,
-          discount: 0,
-          stock: 105,
-          image: 'https://images.unsplash.com/photo-1579373903781-fd5c0c30c4cd?w=400',
-          active: true,
-          featured: true,
-          rating: 4.8,
-          reviews: 1670,
-          releaseDate: '2024-04-22',
-          developer: 'ExploreGames',
-          platform: ['PC', 'PS5', 'Xbox Series X'],
-          tags: ['Adventure', 'Puzzle', 'Story-Rich'],
-          createdAt: new Date('2024-04-15').toISOString(),
-          updatedAt: new Date().toISOString()
-        },
-        {
-          id: 'aventura-2',
-          name: 'Uncharted Odyssey',
-          description: 'Acción y aventura en una búsqueda del tesoro alrededor del mundo con gráficos impresionantes.',
-          category: ProductCategoryEnum.AVENTURA,
-          price: 45990,
-          originalPrice: 64990,
-          discount: 29,
-          stock: 85,
-          image: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=400',
-          active: true,
-          featured: true,
-          rating: 4.9,
-          reviews: 2890,
-          releaseDate: '2024-01-30',
-          developer: 'Naughty Dog',
-          platform: ['PS5'],
-          tags: ['Action-Adventure', 'Cinematic', 'Exploration'],
-          createdAt: new Date('2024-01-15').toISOString(),
-          updatedAt: new Date().toISOString()
-        },
-        {
-          id: 'aventura-3',
-          name: 'Tomb Seeker',
-          description: 'Resuelve puzzles antiguos y supera trampas mortales en templos olvidados.',
-          category: ProductCategoryEnum.AVENTURA,
-          price: 38990,
-          originalPrice: 49990,
-          discount: 22,
-          stock: 125,
-          image: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400',
-          active: true,
-          featured: false,
-          rating: 4.5,
-          reviews: 980,
-          releaseDate: '2024-07-10',
-          developer: 'Crystal Dynamics',
-          platform: ['PC', 'PS5', 'Xbox Series X'],
-          tags: ['Puzzle', 'Exploration', 'Archaeology'],
-          createdAt: new Date('2024-07-01').toISOString(),
-          updatedAt: new Date().toISOString()
+      try {
+        const response = await fetch('/data/products.json');
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
         }
-      ];
-
-      localStorage.setItem(StorageKeys.PRODUCTS, JSON.stringify(defaultProducts));
-      console.log(`✅ ${defaultProducts.length} productos creados`);
+        const productsData: Product[] = await response.json();
+        
+        // Mapear categorías del JSON a ProductCategoryEnum
+        const defaultProducts: Product[] = productsData.map(product => ({
+          ...product,
+          category: this.mapCategoryFromJson(product.category as string)
+        }));
+        
+        localStorage.setItem(StorageKeys.PRODUCTS, JSON.stringify(defaultProducts));
+        console.log(`✅ ${defaultProducts.length} productos cargados desde products.json`);
+      } catch (error) {
+        console.error('❌ Error cargando products.json:', error);
+        throw error;
+      }
     }
   }
 
-  private initializeOrders(): void {
+  /**
+   * Carga órdenes desde el archivo JSON externo
+   */
+  private async initializeOrdersFromJson(): Promise<void> {
     if (!localStorage.getItem(StorageKeys.ORDERS) || this.config.forceReset) {
-      const defaultOrders: Order[] = [];
-      localStorage.setItem(StorageKeys.ORDERS, JSON.stringify(defaultOrders));
-      console.log(`✅ Órdenes inicializadas`);
+      try {
+        const response = await fetch('/data/orders.json');
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const ordersData: Order[] = await response.json();
+        
+        localStorage.setItem(StorageKeys.ORDERS, JSON.stringify(ordersData));
+        console.log(`✅ ${ordersData.length} órdenes cargadas desde orders.json`);
+      } catch (error) {
+        console.error('❌ Error cargando orders.json:', error);
+        throw error;
+      }
+    }
+  }
+
+  /**
+   * Mapea la categoría del JSON al enum ProductCategoryEnum
+   */
+  private mapCategoryFromJson(category: string): ProductCategory {
+    const categoryMap: Record<string, ProductCategory> = {
+      'accion': ProductCategoryEnum.ACCION,
+      'rpg': ProductCategoryEnum.RPG,
+      'estrategia': ProductCategoryEnum.ESTRATEGIA,
+      'aventura': ProductCategoryEnum.AVENTURA
+    };
+    return categoryMap[category.toLowerCase()] || ProductCategoryEnum.ACCION;
+  }
+
+  // ===================================
+  // CHEAPSHARK API INTEGRATION
+  // ===================================
+
+  /**
+   * Interface para la respuesta de CheapShark API
+   */
+  private cheapSharkApiUrl = 'https://www.cheapshark.com/api/1.0/games';
+
+  /**
+   * Carga productos desde la API de CheapShark y los normaliza al formato de Product
+   * @param searchTerm - Término de búsqueda para la API (ej: 'mario', 'zelda')
+   * @param category - Categoría a asignar a los productos importados
+   * @returns Promise<Product[]> - Array de productos normalizados
+   */
+  public async loadProductsFromCheapShark(
+    searchTerm: string, 
+    category: ProductCategory = ProductCategoryEnum.AVENTURA
+  ): Promise<Product[]> {
+    console.log(`🎮 Cargando juegos desde CheapShark API: "${searchTerm}"...`);
+    
+    try {
+      const response = await fetch(`${this.cheapSharkApiUrl}?title=${encodeURIComponent(searchTerm)}`);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const cheapSharkGames: CheapSharkGame[] = await response.json();
+      
+      if (!cheapSharkGames || cheapSharkGames.length === 0) {
+        console.warn('⚠️ No se encontraron juegos en CheapShark para:', searchTerm);
+        return [];
+      }
+      
+      // Normalizar los juegos al formato Product
+      const normalizedProducts: Product[] = cheapSharkGames.map((game, index) => 
+        this.normalizeCheapSharkGame(game, category, index)
+      );
+      
+      console.log(`✅ ${normalizedProducts.length} juegos cargados desde CheapShark API`);
+      return normalizedProducts;
+      
+    } catch (error) {
+      console.error('❌ Error cargando desde CheapShark API:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Normaliza un juego de CheapShark al formato Product de ShikenShop
+   */
+  private normalizeCheapSharkGame(
+    game: CheapSharkGame, 
+    category: ProductCategory,
+    index: number
+  ): Product {
+    // Convertir precio de USD a CLP (aproximado)
+    const priceUSD = parseFloat(game.cheapest) || 0;
+    const priceCLP = Math.round(priceUSD * 950); // Tipo de cambio aproximado
+    
+    // Generar un precio original con descuento aleatorio entre 10-30%
+    const discountPercent = Math.floor(Math.random() * 21) + 10; // 10-30%
+    const originalPriceCLP = Math.round(priceCLP / (1 - discountPercent / 100));
+    
+    // Generar rating aleatorio entre 3.5 y 5
+    const rating = Math.round((Math.random() * 1.5 + 3.5) * 10) / 10;
+    
+    // Generar número de reviews aleatorio
+    const reviews = Math.floor(Math.random() * 2000) + 100;
+    
+    // Generar stock aleatorio
+    const stock = Math.floor(Math.random() * 150) + 50;
+    
+    const now = new Date().toISOString();
+    
+    return {
+      id: `cheapshark-${game.gameID}`,
+      name: game.external,
+      description: `${game.external} - Disponible al mejor precio. Juego importado desde la plataforma de ofertas de videojuegos.`,
+      category: category,
+      price: priceCLP,
+      originalPrice: originalPriceCLP,
+      discount: discountPercent,
+      stock: stock,
+      image: game.thumb || 'https://via.placeholder.com/400x225?text=Game+Image',
+      active: true,
+      featured: index < 3, // Los primeros 3 son destacados
+      rating: rating,
+      reviews: reviews,
+      releaseDate: new Date(Date.now() - Math.random() * 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      developer: 'CheapShark Import',
+      platform: game.steamAppID ? ['PC'] : ['PC', 'Multi-platform'],
+      tags: ['Imported', 'Deal', category],
+      createdAt: now,
+      updatedAt: now
+    };
+  }
+
+  /**
+   * Carga juegos desde CheapShark y los agrega al catálogo existente
+   * @param searchTerm - Término de búsqueda
+   * @param category - Categoría para los productos
+   */
+  public async injectProductsFromCheapShark(
+    searchTerm: string,
+    category: ProductCategory = ProductCategoryEnum.AVENTURA
+  ): Promise<void> {
+    try {
+      const newProducts = await this.loadProductsFromCheapShark(searchTerm, category);
+      
+      if (newProducts.length === 0) {
+        console.warn('⚠️ No hay productos para inyectar');
+        return;
+      }
+      
+      // Obtener productos actuales
+      const currentProducts = this.products();
+      
+      // Filtrar productos que ya existen (por ID)
+      const existingIds = new Set(currentProducts.map(p => p.id));
+      const uniqueNewProducts = newProducts.filter(p => !existingIds.has(p.id));
+      
+      if (uniqueNewProducts.length === 0) {
+        console.log('ℹ️ Todos los productos ya existen en el catálogo');
+        return;
+      }
+      
+      // Combinar productos existentes con los nuevos
+      const updatedProducts = [...currentProducts, ...uniqueNewProducts];
+      
+      // Guardar en localStorage y actualizar estado
+      this.saveProducts(updatedProducts);
+      
+      console.log(`🎉 ${uniqueNewProducts.length} nuevos productos inyectados al catálogo`);
+      console.log('📊 Total de productos en catálogo:', updatedProducts.length);
+      
+    } catch (error) {
+      console.error('❌ Error inyectando productos desde CheapShark:', error);
+      throw error;
     }
   }
 
@@ -653,7 +593,7 @@ export class DataService {
     console.log('Comprador 2: maria.gomez@test.com / Maria123\n');
   }
 
-  public resetAllData(): void {
+  public async resetAllData(): Promise<void> {
     localStorage.removeItem(StorageKeys.USERS);
     localStorage.removeItem(StorageKeys.PRODUCTS);
     localStorage.removeItem(StorageKeys.ORDERS);
@@ -663,9 +603,9 @@ export class DataService {
     
     console.log('🗑️ Todos los datos han sido eliminados');
     
-    // Reinicializar
+    // Reinicializar desde JSON
     this.config.forceReset = true;
-    this.initializeData();
+    await this.initializeData();
     this.config.forceReset = false;
   }
 
