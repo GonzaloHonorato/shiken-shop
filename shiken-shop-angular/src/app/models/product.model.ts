@@ -102,10 +102,12 @@ export interface Product {
   discount: number;
   stock: number;
   image: string;
+  images?: string[];
   active: boolean;
   featured: boolean;
   rating: number;
   reviews: number;
+  productReviews?: ProductReview[];
   releaseDate: string;
   developer: string;
   platform: string[];
@@ -167,4 +169,20 @@ export interface ProductSearchParams {
   sortOrder?: 'asc' | 'desc';
   limit?: number;
   offset?: number;
+}
+
+// ===================================
+// PRODUCT REVIEWS
+// Interfaz para reseñas de productos
+// ===================================
+
+export interface ProductReview {
+  id: string;
+  productId: string;
+  userId: string;
+  userName: string;
+  rating: number;
+  comment: string;
+  createdAt: string;
+  helpful?: number;
 }

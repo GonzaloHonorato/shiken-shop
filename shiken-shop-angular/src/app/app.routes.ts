@@ -63,13 +63,25 @@ export const routes: Routes = [
     }
   },
 
+  // FASE 2: Detalle de producto - Ruta pública
+  {
+    path: 'product/:id',
+    loadComponent: () => import('./pages/product-detail/product-detail.component').then(m => m.ProductDetailComponent),
+    title: 'Detalle del Producto - ShikenShop',
+    data: {
+      preload: true,
+      priority: 'high',
+      preloadDelay: 500
+    }
+  },
+
   // FASE 2: Categorías de juegos - Rutas públicas
   {
     path: 'categories/accion',
     loadComponent: () => import('./pages/categories/accion/accion.component').then(m => m.AccionComponent),
     title: 'Juegos de Acción - ShikenShop',
-    data: { 
-      preload: true, 
+    data: {
+      preload: true,
       priority: 'medium',
       preloadDelay: 1000
     }
