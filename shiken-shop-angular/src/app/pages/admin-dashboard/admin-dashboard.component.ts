@@ -107,8 +107,8 @@ export class AdminDashboardComponent implements OnInit {
       return;
     }
 
-    // Ensure data is initialized first
-    this.dataService.initializeData();
+    // Ensure data is loaded from API
+    this.dataService.loadProductsFromApi();
     this.loadDashboardData();
   }
 

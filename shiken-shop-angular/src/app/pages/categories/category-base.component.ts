@@ -153,7 +153,7 @@ export class CategoryBaseComponent implements OnInit, OnDestroy {
     this.notificationService.info('Filtros limpiados');
   }
 
-  addToCart(product: Product): void {
+  async addToCart(product: Product): Promise<void> {
     if (!this.authService.isAuthenticated()) {
       this.notificationService.warning('Debes iniciar sesión para agregar productos al carrito');
       return;
@@ -167,8 +167,11 @@ export class CategoryBaseComponent implements OnInit, OnDestroy {
     newAdded.add(product.id);
     this.addedProducts.set(newAdded);
     
-    // Usar el método addToCart del DataService
-    this.dataService.addToCart(product.id, 1);
+    // Usar el método addToCartHTTP del DataService
+    const user = this.authService.currentUser();
+    if (user) {
+      await this.dataService.addToCartHTTP(user.email, product.id, 1);
+    }
     
     // Mostrar notificación
     this.notificationService.success(`${product.name} agregado al carrito 🛒`);

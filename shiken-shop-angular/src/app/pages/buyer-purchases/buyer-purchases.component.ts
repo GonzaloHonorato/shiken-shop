@@ -211,16 +211,17 @@ export class BuyerPurchasesComponent implements OnInit {
   }
 
   // Recomprar orden
-  reorderItems(order: Order) {
+  async reorderItems(order: Order): Promise<void> {
+    const user = this.currentUser();
+    if (!user) return;
+
     // Limpiar carrito actual
-    this.dataService.clearCart();
+    await this.dataService.clearCartHTTP(user.email);
     
     // Agregar items de la orden al carrito
-    order.items.forEach(item => {
-      for (let i = 0; i < item.quantity; i++) {
-        this.dataService.addToCart(item.id);
-      }
-    });
+    for (const item of order.items) {
+      await this.dataService.addToCartHTTP(user.email, item.id, item.quantity);
+    }
 
     // Navegar al carrito
     this.router.navigate(['/cart']);

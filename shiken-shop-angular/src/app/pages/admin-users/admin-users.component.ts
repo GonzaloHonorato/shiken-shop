@@ -113,7 +113,7 @@ export class AdminUsersComponent {
     this.selectedUser.set(null);
   }
 
-  changeUserRole(newRole: string): void {
+  async changeUserRole(newRole: string): Promise<void> {
     const user = this.selectedUser();
     const current = this.currentUser();
     
@@ -132,9 +132,13 @@ export class AdminUsersComponent {
     }
 
     try {
-      this.dataService.updateUserRole(user.email, newRole as UserRole);
-      this.notificationService.show('Rol actualizado correctamente', NotificationType.SUCCESS);
-      this.closeModal();
+      const success = await this.dataService.updateUserRole(user.email, newRole as UserRole);
+      if (success) {
+        this.notificationService.show('Rol actualizado correctamente', NotificationType.SUCCESS);
+        this.closeModal();
+      } else {
+        this.notificationService.show('Error al actualizar el rol', NotificationType.ERROR);
+      }
     } catch (error) {
       this.notificationService.show('Error al actualizar el rol', NotificationType.ERROR);
     }

@@ -1,0 +1,88 @@
+version: '3.8'
+
+networks:
+  webnet:
+    driver: bridge
+
+volumes:
+  nginx-certs:
+  nginx-vhost:
+  nginx-html:
+
+services:
+
+  # =====================================================
+  # 1. NGINX REVERSE PROXY
+  # =====================================================
+  nginx-proxy:
+    image: jwilder/nginx-proxy
+    container_name: nginx-proxy
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      - DEFAULT_HOST=full2.adndigital.cl
+    volumes:
+      - nginx-certs:/etc/nginx/certs
+      - nginx-vhost:/etc/nginx/vhost.d
+      - nginx-html:/usr/share/nginx/html
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+    networks:
+      - webnet
+
+  # =====================================================
+  # 2. LETSENCRYPT COMPANION
+  # =====================================================
+  letsencrypt-nginx-proxy-companion:
+    image: jrcs/letsencrypt-nginx-proxy-companion
+    container_name: nginx-proxy-companion
+    restart: always
+    depends_on:
+      - nginx-proxy
+    environment:
+      - NGINX_PROXY_CONTAINER=nginx-proxy
+      - DEFAULT_EMAIL=hola@gonzalohonorato.cl
+      - ACME_CA_URI=https://acme-v02.api.letsencrypt.org/directory
+    volumes:
+      - nginx-certs:/etc/nginx/certs
+      - nginx-vhost:/etc/nginx/vhost.d
+      - nginx-html:/usr/share/nginx/html
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - webnet
+
+  # =====================================================
+  # 3. SHIKEN SHOP BACKEND API
+  # =====================================================
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: shiken-shop-backend
+    restart: unless-stopped
+    depends_on:
+      - nginx-proxy
+    environment:
+      # Configuración de Nginx Proxy
+      - VIRTUAL_HOST=full2.adndigital.cl
+      - LETSENCRYPT_HOST=full2.adndigital.cl
+      - LETSENCRYPT_EMAIL=hola@gonzalohonorato.cl
+      - VIRTUAL_PORT=3000
+      
+      # Configuración de la aplicación
+      - NODE_ENV=production
+      - PORT=3000
+      - CORS_ORIGIN=https://soft-granita-84ab95.netlify.app,https://full2.adndigital.cl,http://localhost:4200
+      - CHEAPSHARK_API_URL=https://www.cheapshark.com/api/1.0
+      - IMPORT_CHEAPSHARK=false
+    expose:
+      - "3000"
+    networks:
+      - webnet
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s

@@ -132,7 +132,7 @@ export class AdminSalesComponent {
     this.selectedOrder.set(null);
   }
 
-  updateOrderStatus(newStatus: OrderStatus | string): void {
+  async updateOrderStatus(newStatus: OrderStatus | string): Promise<void> {
     const order = this.selectedOrder();
     if (!order) return;
 
@@ -143,7 +143,7 @@ export class AdminSalesComponent {
       const statusValue = typeof newStatus === 'string' ? newStatus as OrderStatus : newStatus;
       
       // Update order status via DataService
-      const success = this.dataService.updateOrderStatus(order.orderNumber, statusValue);
+      const success = await this.dataService.updateOrderStatus(order.orderNumber, statusValue);
       
       if (success) {
         this.notificationService.show('Estado de orden actualizado correctamente', NotificationType.SUCCESS);

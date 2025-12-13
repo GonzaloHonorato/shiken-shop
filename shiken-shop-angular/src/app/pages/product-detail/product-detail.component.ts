@@ -111,7 +111,7 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
     }
   }
 
-  addToCart(): void {
+  async addToCart(): Promise<void> {
     const prod = this.product();
 
     if (!this.authService.isAuthenticated()) {
@@ -124,7 +124,12 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
     console.log('🛒 [PRODUCT-DETAIL] Agregando al carrito:', prod.name, 'Cantidad:', this.quantity());
 
     this.isAddedToCart.set(true);
-    this.dataService.addToCart(prod.id, this.quantity());
+    
+    const user = this.authService.currentUser();
+    if (user) {
+      await this.dataService.addToCartHTTP(user.email, prod.id, this.quantity());
+    }
+    
     this.notificationService.success(`${prod.name} agregado al carrito 🛒`);
 
     setTimeout(() => {

@@ -1,5 +1,6 @@
 import { Injectable, signal, computed, inject } from '@angular/core';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { HttpClient } from '@angular/common/http';
+import { BehaviorSubject, Observable, firstValueFrom } from 'rxjs';
 import { 
   User, 
   Product, 
@@ -13,6 +14,7 @@ import {
   StorageKeys,
   UserRole 
 } from '../models';
+import { environment } from '../../environments/environment';
 
 // ===================================
 // DATA SERVICE CONFIGURATION
@@ -30,10 +32,6 @@ const DEFAULT_DATA_CONFIG: DataConfig = {
 // ===================================
 // CHEAPSHARK API INTERFACE
 // ===================================
-/**
- * Interface para la respuesta de la API de CheapShark
- * https://www.cheapshark.com/api/1.0/games
- */
 interface CheapSharkGame {
   gameID: string;
   steamAppID: string | null;
@@ -44,10 +42,23 @@ interface CheapSharkGame {
   thumb: string;
 }
 
+// ===================================
+// API RESPONSE INTERFACE
+// ===================================
+interface ApiResponse<T = any> {
+  success: boolean;
+  message?: string;
+  data?: T;
+  error?: string;
+  total?: number;
+}
+
 @Injectable({
   providedIn: 'root'
 })
 export class DataService {
+  private http = inject(HttpClient);
+  private apiUrl = environment.apiUrl;
   private config: DataConfig = DEFAULT_DATA_CONFIG;
 
   // ===================================
@@ -59,12 +70,14 @@ export class DataService {
   private productsSignal = signal<Product[]>([]);
   private ordersSignal = signal<Order[]>([]);
   private cartSignal = signal<CartItem[]>([]);
+  private dataReadySignal = signal<boolean>(false);
   
   // Computed signals
   public readonly users = this.usersSignal.asReadonly();
   public readonly products = this.productsSignal.asReadonly();
   public readonly orders = this.ordersSignal.asReadonly();
   public readonly cart = this.cartSignal.asReadonly();
+  public readonly dataReady = this.dataReadySignal.asReadonly();
   
   // Computed properties
   public readonly featuredProducts = computed(() => 
@@ -92,142 +105,95 @@ export class DataService {
   public readonly orders$ = this.ordersSubject.asObservable();
   public readonly cart$ = this.cartSubject.asObservable();
 
-  // Flag para indicar si los datos están listos
-  private dataReadySignal = signal<boolean>(false);
-  public readonly dataReady = this.dataReadySignal.asReadonly();
-
   constructor() {
-    this.initializeData();
+    // Inicializar de forma asíncrona sin bloquear
+    this.initializeData().catch(err => {
+      console.warn('⚠️ No se pudo conectar al backend:', err.message);
+    });
   }
 
   // ===================================
   // INITIALIZATION
   // ===================================
-  
-  public async initializeData(): Promise<void> {
-    console.log('🚀 Inicializando datos de ShikenShop...');
+
+  /**
+   * Inicializa los datos desde el backend API
+   */
+  private async initializeData(): Promise<void> {
+    console.log('🚀 Iniciando carga de datos desde API...');
+    console.log('📡 URL del API:', this.apiUrl);
     
-    const dataVersion = localStorage.getItem('dataVersion');
-    
-    // Si no existe versión o se fuerza reset
-    if (!dataVersion || this.config.forceReset) {
-      console.log('📦 Cargando datos iniciales desde archivos JSON...');
+    try {
+      // Cargar productos desde el backend con timeout
+      await this.loadProductsFromApi();
       
-      try {
-        await this.initializeUsersFromJson();
-        await this.initializeProductsFromJson();
-        await this.initializeOrdersFromJson();
-        this.initializeCart();
-        
-        // Cargar datos desde localStorage primero
-        this.loadAllData();
-        
-        // Inyectar productos desde CheapShark API (categoría Aventura)
-        console.log('🎮 Inyectando productos desde CheapShark API...');
-        await this.injectProductsFromCheapShark('mario', ProductCategoryEnum.AVENTURA);
-        
-        // Guardar versión
-        localStorage.setItem('dataVersion', this.config.version);
-        console.log('✨ Datos cargados desde JSON y API correctamente');
-      } catch (error) {
-        console.error('❌ Error cargando datos:', error);
-      }
-    } else {
-      console.log('ℹ️ Datos ya inicializados (versión ' + dataVersion + ')');
-    }
-    
-    // Cargar datos desde localStorage
-    this.loadAllData();
-    this.dataReadySignal.set(true);
-    this.displayStats();
-  }
-
-  /**
-   * Carga usuarios desde el archivo JSON externo
-   */
-  private async initializeUsersFromJson(): Promise<void> {
-    if (!localStorage.getItem(StorageKeys.USERS) || this.config.forceReset) {
-      try {
-        const response = await fetch('/data/users.json');
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const usersData: User[] = await response.json();
-        
-        // Mapear roles del JSON a UserRole enum
-        const defaultUsers: User[] = usersData.map(user => ({
-          ...user,
-          role: user.role === 'admin' ? UserRole.ADMIN : UserRole.BUYER
-        }));
-        
-        localStorage.setItem(StorageKeys.USERS, JSON.stringify(defaultUsers));
-        console.log(`✅ ${defaultUsers.length} usuarios cargados desde users.json`);
-      } catch (error) {
-        console.error('❌ Error cargando users.json:', error);
-        throw error;
-      }
+      this.dataReadySignal.set(true);
+      this.displayStats();
+      console.log('✨ Datos cargados desde API correctamente');
+    } catch (error: any) {
+      console.error('❌ Error cargando datos desde API:', error?.message || error);
+      console.warn('⚠️ La aplicación funcionará sin datos del backend. Asegúrate de que el backend esté corriendo en', this.apiUrl);
+      // Marcar como listo aunque haya error para no bloquear la UI
+      this.dataReadySignal.set(true);
     }
   }
 
   /**
-   * Carga productos desde el archivo JSON externo
+   * Carga productos desde el backend API
    */
-  private async initializeProductsFromJson(): Promise<void> {
-    if (!localStorage.getItem(StorageKeys.PRODUCTS) || this.config.forceReset) {
-      try {
-        const response = await fetch('/data/products.json');
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const productsData: Product[] = await response.json();
-        
-        // Mapear categorías del JSON a ProductCategoryEnum
-        const defaultProducts: Product[] = productsData.map(product => ({
-          ...product,
-          category: this.mapCategoryFromJson(product.category as string)
-        }));
-        
-        localStorage.setItem(StorageKeys.PRODUCTS, JSON.stringify(defaultProducts));
-        console.log(`✅ ${defaultProducts.length} productos cargados desde products.json`);
-      } catch (error) {
-        console.error('❌ Error cargando products.json:', error);
-        throw error;
+  public async loadProductsFromApi(): Promise<void> {
+    try {
+      const response = await firstValueFrom(
+        this.http.get<ApiResponse<Product[]>>(`${this.apiUrl}/products`)
+      );
+      
+      if (response.success && response.data) {
+        this.productsSignal.set(response.data);
+        this.productsSubject.next(response.data);
+        console.log(`✅ ${response.data.length} productos cargados desde API`);
       }
+    } catch (error) {
+      console.error('❌ Error cargando productos desde API:', error);
+      throw error;
     }
   }
 
   /**
-   * Carga órdenes desde el archivo JSON externo
+   * Carga órdenes del usuario desde el backend
    */
-  private async initializeOrdersFromJson(): Promise<void> {
-    if (!localStorage.getItem(StorageKeys.ORDERS) || this.config.forceReset) {
-      try {
-        const response = await fetch('/data/orders.json');
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const ordersData: Order[] = await response.json();
-        
-        localStorage.setItem(StorageKeys.ORDERS, JSON.stringify(ordersData));
-        console.log(`✅ ${ordersData.length} órdenes cargadas desde orders.json`);
-      } catch (error) {
-        console.error('❌ Error cargando orders.json:', error);
-        throw error;
+  public async loadUserOrders(userId: string): Promise<void> {
+    try {
+      const response = await firstValueFrom(
+        this.http.get<ApiResponse<Order[]>>(`${this.apiUrl}/orders?userId=${userId}`)
+      );
+      
+      if (response.success && response.data) {
+        this.ordersSignal.set(response.data);
+        this.ordersSubject.next(response.data);
+        console.log(`✅ ${response.data.length} órdenes cargadas desde API`);
       }
+    } catch (error) {
+      console.error('❌ Error cargando órdenes desde API:', error);
     }
   }
 
   /**
-   * Mapea la categoría del JSON al enum ProductCategoryEnum
+   * Carga el carrito del usuario desde el backend
    */
-  private mapCategoryFromJson(category: string): ProductCategory {
-    const categoryMap: Record<string, ProductCategory> = {
-      'accion': ProductCategoryEnum.ACCION,
-      'rpg': ProductCategoryEnum.RPG,
-      'estrategia': ProductCategoryEnum.ESTRATEGIA,
-      'aventura': ProductCategoryEnum.AVENTURA
-    };
-    return categoryMap[category.toLowerCase()] || ProductCategoryEnum.ACCION;
+  public async loadUserCart(userId: string): Promise<void> {
+    try {
+      const response = await firstValueFrom(
+        this.http.get<ApiResponse<{ items: CartItem[] }>>(`${this.apiUrl}/cart/${userId}`)
+      );
+      
+      if (response.success && response.data) {
+        this.cartSignal.set(response.data.items);
+        this.cartSubject.next(response.data.items);
+        console.log(`✅ Carrito cargado desde API con ${response.data.items.length} items`);
+      }
+    } catch (error) {
+      console.error('❌ Error cargando carrito desde API:', error);
+    }
   }
 
   // ===================================
@@ -235,180 +201,242 @@ export class DataService {
   // ===================================
 
   /**
-   * Interface para la respuesta de CheapShark API
+   * Busca juegos en CheapShark a través del backend proxy
    */
-  private cheapSharkApiUrl = 'https://www.cheapshark.com/api/1.0/games';
-
-  /**
-   * Carga productos desde la API de CheapShark y los normaliza al formato de Product
-   * @param searchTerm - Término de búsqueda para la API (ej: 'mario', 'zelda')
-   * @param category - Categoría a asignar a los productos importados
-   * @returns Promise<Product[]> - Array de productos normalizados
-   */
-  public async loadProductsFromCheapShark(
-    searchTerm: string, 
-    category: ProductCategory = ProductCategoryEnum.AVENTURA
-  ): Promise<Product[]> {
-    console.log(`🎮 Cargando juegos desde CheapShark API: "${searchTerm}"...`);
+  public async loadProductsFromCheapShark(searchTerm: string): Promise<CheapSharkGame[]> {
+    console.log(`🎮 Buscando juegos en CheapShark: "${searchTerm}"...`);
     
     try {
-      const response = await fetch(`${this.cheapSharkApiUrl}?title=${encodeURIComponent(searchTerm)}`);
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      const cheapSharkGames: CheapSharkGame[] = await response.json();
-      
-      if (!cheapSharkGames || cheapSharkGames.length === 0) {
-        console.warn('⚠️ No se encontraron juegos en CheapShark para:', searchTerm);
-        return [];
-      }
-      
-      // Normalizar los juegos al formato Product
-      const normalizedProducts: Product[] = cheapSharkGames.map((game, index) => 
-        this.normalizeCheapSharkGame(game, category, index)
+      const response = await firstValueFrom(
+        this.http.get<ApiResponse<CheapSharkGame[]>>(
+          `${this.apiUrl}/cheapshark/search?q=${encodeURIComponent(searchTerm)}`
+        )
       );
       
-      console.log(`✅ ${normalizedProducts.length} juegos cargados desde CheapShark API`);
-      return normalizedProducts;
+      if (response.success && response.data) {
+        console.log(`✅ ${response.data.length} juegos encontrados en CheapShark`);
+        return response.data;
+      }
       
+      return [];
     } catch (error) {
-      console.error('❌ Error cargando desde CheapShark API:', error);
-      throw error;
+      console.error('❌ Error buscando en CheapShark:', error);
+      return [];
     }
   }
 
   /**
-   * Normaliza un juego de CheapShark al formato Product de ShikenShop
+   * Importa juegos de CheapShark al catálogo del backend
    */
-  private normalizeCheapSharkGame(
-    game: CheapSharkGame, 
-    category: ProductCategory,
-    index: number
-  ): Product {
-    // Convertir precio de USD a CLP (aproximado)
-    const priceUSD = parseFloat(game.cheapest) || 0;
-    const priceCLP = Math.round(priceUSD * 950); // Tipo de cambio aproximado
-    
-    // Generar un precio original con descuento aleatorio entre 10-30%
-    const discountPercent = Math.floor(Math.random() * 21) + 10; // 10-30%
-    const originalPriceCLP = Math.round(priceCLP / (1 - discountPercent / 100));
-    
-    // Generar rating aleatorio entre 3.5 y 5
-    const rating = Math.round((Math.random() * 1.5 + 3.5) * 10) / 10;
-    
-    // Generar número de reviews aleatorio
-    const reviews = Math.floor(Math.random() * 2000) + 100;
-    
-    // Generar stock aleatorio
-    const stock = Math.floor(Math.random() * 150) + 50;
-    
-    const now = new Date().toISOString();
-    
-    return {
-      id: `cheapshark-${game.gameID}`,
-      name: game.external,
-      description: `${game.external} - Disponible al mejor precio. Juego importado desde la plataforma de ofertas de videojuegos.`,
-      category: category,
-      price: priceCLP,
-      originalPrice: originalPriceCLP,
-      discount: discountPercent,
-      stock: stock,
-      image: game.thumb || 'https://via.placeholder.com/400x225?text=Game+Image',
-      active: true,
-      featured: index < 3, // Los primeros 3 son destacados
-      rating: rating,
-      reviews: reviews,
-      releaseDate: new Date(Date.now() - Math.random() * 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      developer: 'CheapShark Import',
-      platform: game.steamAppID ? ['PC'] : ['PC', 'Multi-platform'],
-      tags: ['Imported', 'Deal', category],
-      createdAt: now,
-      updatedAt: now
-    };
-  }
-
-  /**
-   * Carga juegos desde CheapShark y los agrega al catálogo existente
-   * @param searchTerm - Término de búsqueda
-   * @param category - Categoría para los productos
-   */
-  public async injectProductsFromCheapShark(
+  public async importProductsFromCheapShark(
     searchTerm: string,
-    category: ProductCategory = ProductCategoryEnum.AVENTURA
-  ): Promise<void> {
+    category: ProductCategory = ProductCategoryEnum.AVENTURA,
+    limit: number = 20
+  ): Promise<Product[]> {
+    console.log(`🎮 Importando productos de CheapShark...`);
+    
     try {
-      const newProducts = await this.loadProductsFromCheapShark(searchTerm, category);
+      const response = await firstValueFrom(
+        this.http.post<ApiResponse<Product[]>>(
+          `${this.apiUrl}/cheapshark/import`,
+          { searchTerm, category, limit }
+        )
+      );
       
-      if (newProducts.length === 0) {
-        console.warn('⚠️ No hay productos para inyectar');
-        return;
+      if (response.success && response.data) {
+        console.log(`✅ ${response.data.length} productos importados de CheapShark`);
+        // Recargar productos para incluir los nuevos
+        await this.loadProductsFromApi();
+        return response.data;
       }
       
-      // Obtener productos actuales
-      const currentProducts = this.products();
-      
-      // Filtrar productos que ya existen (por ID)
-      const existingIds = new Set(currentProducts.map(p => p.id));
-      const uniqueNewProducts = newProducts.filter(p => !existingIds.has(p.id));
-      
-      if (uniqueNewProducts.length === 0) {
-        console.log('ℹ️ Todos los productos ya existen en el catálogo');
-        return;
-      }
-      
-      // Combinar productos existentes con los nuevos
-      const updatedProducts = [...currentProducts, ...uniqueNewProducts];
-      
-      // Guardar en localStorage y actualizar estado
-      this.saveProducts(updatedProducts);
-      
-      console.log(`🎉 ${uniqueNewProducts.length} nuevos productos inyectados al catálogo`);
-      console.log('📊 Total de productos en catálogo:', updatedProducts.length);
-      
+      return [];
     } catch (error) {
-      console.error('❌ Error inyectando productos desde CheapShark:', error);
-      throw error;
+      console.error('❌ Error importando desde CheapShark:', error);
+      return [];
     }
   }
 
-  private initializeCart(): void {
-    if (!localStorage.getItem(StorageKeys.CART)) {
-      localStorage.setItem(StorageKeys.CART, JSON.stringify([]));
-      console.log('✅ Carrito inicializado');
+  // ===================================
+  // CART HTTP METHODS (API)
+  // ===================================
+
+  /**
+   * Agrega un producto al carrito vía API
+   */
+  public async addToCartHTTP(userId: string, productId: string, quantity: number = 1): Promise<boolean> {
+    console.log('🛒 [API] addToCartHTTP:', { userId, productId, quantity });
+    
+    try {
+      const response = await firstValueFrom(
+        this.http.post<ApiResponse<{ items: CartItem[] }>>(
+          `${this.apiUrl}/cart/${userId}/add`,
+          { productId, quantity }
+        )
+      );
+      
+      if (response.success && response.data) {
+        this.cartSignal.set(response.data.items);
+        this.cartSubject.next(response.data.items);
+        console.log('✅ Producto agregado al carrito');
+        return true;
+      }
+      
+      return false;
+    } catch (error) {
+      console.error('❌ Error agregando al carrito:', error);
+      return false;
     }
   }
 
-  private loadAllData(): void {
-    this.loadUsers();
-    this.loadProducts();
-    this.loadOrders();
-    this.loadCart();
+  /**
+   * Actualiza la cantidad de un item en el carrito vía API
+   */
+  public async updateCartItemHTTP(userId: string, productId: string, quantity: number): Promise<boolean> {
+    console.log('🛒 [API] updateCartItemHTTP:', { userId, productId, quantity });
+    
+    try {
+      const response = await firstValueFrom(
+        this.http.put<ApiResponse<{ items: CartItem[] }>>(
+          `${this.apiUrl}/cart/${userId}/update`,
+          { productId, quantity }
+        )
+      );
+      
+      if (response.success && response.data) {
+        this.cartSignal.set(response.data.items);
+        this.cartSubject.next(response.data.items);
+        console.log('✅ Cantidad actualizada en carrito');
+        return true;
+      }
+      
+      return false;
+    } catch (error) {
+      console.error('❌ Error actualizando carrito:', error);
+      return false;
+    }
   }
 
-  private loadUsers(): void {
-    const users = JSON.parse(localStorage.getItem(StorageKeys.USERS) || '[]');
-    this.usersSignal.set(users);
-    this.usersSubject.next(users);
+  /**
+   * Elimina un item del carrito vía API
+   */
+  public async removeFromCartHTTP(userId: string, productId: string): Promise<boolean> {
+    console.log('🛒 [API] removeFromCartHTTP:', { userId, productId });
+    
+    try {
+      const response = await firstValueFrom(
+        this.http.delete<ApiResponse<{ items: CartItem[] }>>(
+          `${this.apiUrl}/cart/${userId}/remove/${productId}`
+        )
+      );
+      
+      if (response.success && response.data) {
+        this.cartSignal.set(response.data.items);
+        this.cartSubject.next(response.data.items);
+        console.log('✅ Producto eliminado del carrito');
+        return true;
+      }
+      
+      return false;
+    } catch (error) {
+      console.error('❌ Error eliminando del carrito:', error);
+      return false;
+    }
   }
 
-  private loadProducts(): void {
-    const products = JSON.parse(localStorage.getItem(StorageKeys.PRODUCTS) || '[]');
-    this.productsSignal.set(products);
-    this.productsSubject.next(products);
+  /**
+   * Limpia el carrito completo vía API
+   */
+  public async clearCartHTTP(userId: string): Promise<boolean> {
+    console.log('🛒 [API] clearCartHTTP:', { userId });
+    
+    try {
+      const response = await firstValueFrom(
+        this.http.delete<ApiResponse<{ items: CartItem[] }>>(
+          `${this.apiUrl}/cart/${userId}/clear`
+        )
+      );
+      
+      if (response.success) {
+        this.cartSignal.set([]);
+        this.cartSubject.next([]);
+        console.log('✅ Carrito vaciado');
+        return true;
+      }
+      
+      return false;
+    } catch (error) {
+      console.error('❌ Error vaciando carrito:', error);
+      return false;
+    }
   }
 
-  private loadOrders(): void {
-    const orders = JSON.parse(localStorage.getItem(StorageKeys.ORDERS) || '[]');
-    this.ordersSignal.set(orders);
-    this.ordersSubject.next(orders);
+  // ===================================
+  // ORDER HTTP METHODS (API)
+  // ===================================
+
+  /**
+   * Crea una nueva orden vía API
+   */
+  public async createOrderHTTP(orderData: {
+    userId: string;
+    items: CartItem[];
+    shippingAddress: any;
+    paymentMethod: string;
+    subtotal: number;
+    discount: number;
+    total: number;
+  }): Promise<Order | null> {
+    console.log('📦 [API] createOrderHTTP:', orderData);
+    
+    try {
+      const response = await firstValueFrom(
+        this.http.post<ApiResponse<Order>>(
+          `${this.apiUrl}/orders`,
+          orderData
+        )
+      );
+      
+      if (response.success && response.data) {
+        // Agregar orden a la lista local
+        const currentOrders = this.orders();
+        this.ordersSignal.set([...currentOrders, response.data]);
+        this.ordersSubject.next([...currentOrders, response.data]);
+        console.log('✅ Orden creada:', response.data.orderNumber);
+        return response.data;
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('❌ Error creando orden:', error);
+      return null;
+    }
   }
 
-  private loadCart(): void {
-    const cart = JSON.parse(localStorage.getItem(StorageKeys.CART) || '[]');
-    this.cartSignal.set(cart);
-    this.cartSubject.next(cart);
+  // ===================================
+  // LOCAL CART MIGRATION
+  // ===================================
+
+  /**
+   * Migra carrito local al backend cuando el usuario se loguea
+   */
+  public async migrateLocalCartToBackend(userId: string): Promise<void> {
+    const localCart = JSON.parse(localStorage.getItem(StorageKeys.CART) || '[]');
+    
+    if (localCart.length === 0) {
+      await this.loadUserCart(userId);
+      return;
+    }
+
+    console.log(`🔄 Migrando ${localCart.length} items del carrito local al backend...`);
+    
+    for (const item of localCart) {
+      await this.addToCartHTTP(userId, item.id, item.quantity);
+    }
+    
+    // Limpiar carrito local
+    localStorage.setItem(StorageKeys.CART, JSON.stringify([]));
+    console.log('✅ Carrito migrado al backend');
   }
 
   // ===================================
@@ -479,7 +507,7 @@ export class DataService {
         p.name.toLowerCase().includes(query) ||
         p.description.toLowerCase().includes(query) ||
         p.developer.toLowerCase().includes(query) ||
-        p.tags.some(tag => tag.toLowerCase().includes(query))
+        p.tags.some((tag: string) => tag.toLowerCase().includes(query))
       );
     }
 
@@ -520,14 +548,14 @@ export class DataService {
     // Filtrar por plataformas
     if (filter.platforms && filter.platforms.length > 0) {
       filteredProducts = filteredProducts.filter(p => 
-        filter.platforms!.some(platform => p.platform.includes(platform))
+        filter.platforms!.some((platform: string) => p.platform.includes(platform))
       );
     }
 
     // Filtrar por tags
     if (filter.tags && filter.tags.length > 0) {
       filteredProducts = filteredProducts.filter(p => 
-        filter.tags!.some(tag => p.tags.includes(tag))
+        filter.tags!.some((tag: string) => p.tags.includes(tag))
       );
     }
 
@@ -573,179 +601,22 @@ export class DataService {
   }
 
   // ===================================
-  // UTILITY METHODS
-  // ===================================
-
-  public displayStats(): void {
-    const users = this.users();
-    const products = this.products();
-    const orders = this.orders();
-    const cart = this.cart();
-    
-    console.log('\n📊 ESTADÍSTICAS DE DATOS:');
-    console.log('👥 Usuarios:', users.length);
-    console.log('📦 Productos:', products.length);
-    console.log('🛒 Órdenes:', orders.length);
-    console.log('🛍️ Items en carrito:', cart.length);
-    console.log('\n🔐 CUENTAS DE PRUEBA:');
-    console.log('Admin: admin@shikenshop.com / Admin123');
-    console.log('Comprador: comprador@test.com / Comprador123');
-    console.log('Comprador 2: maria.gomez@test.com / Maria123\n');
-  }
-
-  public async resetAllData(): Promise<void> {
-    localStorage.removeItem(StorageKeys.USERS);
-    localStorage.removeItem(StorageKeys.PRODUCTS);
-    localStorage.removeItem(StorageKeys.ORDERS);
-    localStorage.removeItem(StorageKeys.CART);
-    localStorage.removeItem(StorageKeys.SESSION);
-    localStorage.removeItem('dataVersion');
-    
-    console.log('🗑️ Todos los datos han sido eliminados');
-    
-    // Reinicializar desde JSON
-    this.config.forceReset = true;
-    await this.initializeData();
-    this.config.forceReset = false;
-  }
-
-  // ===================================
-  // DATA PERSISTENCE METHODS
-  // ===================================
-
-  public saveProducts(products: Product[]): void {
-    localStorage.setItem(StorageKeys.PRODUCTS, JSON.stringify(products));
-    this.loadProducts();
-  }
-
-  public saveUsers(users: User[]): void {
-    localStorage.setItem(StorageKeys.USERS, JSON.stringify(users));
-    this.loadUsers();
-  }
-
-  public saveOrders(orders: Order[]): void {
-    localStorage.setItem(StorageKeys.ORDERS, JSON.stringify(orders));
-    this.ordersSignal.set(orders);
-    this.ordersSubject.next(orders);
-    console.log('💾 Órdenes guardadas:', orders.length, 'órdenes');
-  }
-
-  public saveCart(cart: CartItem[]): void {
-    localStorage.setItem(StorageKeys.CART, JSON.stringify(cart));
-    this.loadCart();
-  }
-
-  // ===================================
-  // CART MANAGEMENT METHODS
+  // CART LOCAL HELPERS
   // ===================================
 
   /**
-   * Agrega un producto al carrito
+   * Verifica si un producto está en el carrito (usa estado local)
    */
-  public addToCart(productId: string, quantity: number = 1): boolean {
-    console.log('🛒 [DataService] addToCart llamado con:', { productId, quantity });
-    
-    const product = this.products().find(p => p.id === productId);
-    console.log('🛒 [DataService] Producto encontrado:', product);
-    
-    if (!product) {
-      console.warn('Producto no encontrado:', productId);
-      return false;
-    }
-
-    const currentCart = [...this.cart()];
-    console.log('🛒 [DataService] Carrito actual:', currentCart);
-    
-    const existingItemIndex = currentCart.findIndex(item => item.id === productId);
-
-    if (existingItemIndex >= 0) {
-      // El producto ya existe en el carrito, actualizar cantidad
-      const existingItem = currentCart[existingItemIndex];
-      const newQuantity = existingItem.quantity + quantity;
-      
-      if (newQuantity <= product.stock) {
-        existingItem.quantity = newQuantity;
-        console.log('🛒 [DataService] Actualizando cantidad existente:', newQuantity);
-      } else {
-        console.warn('Stock insuficiente para el producto:', product.name);
-        return false;
-      }
-    } else {
-      // Agregar nuevo producto al carrito
-      if (quantity <= product.stock) {
-        const cartItem: CartItem = {
-          id: product.id,
-          name: product.name,
-          price: product.price,
-          originalPrice: product.originalPrice || product.price,
-          discount: product.discount || 0,
-          image: product.image,
-          quantity: quantity,
-          maxStock: product.stock
-        };
-        console.log('🛒 [DataService] Creando nuevo cartItem:', cartItem);
-        currentCart.push(cartItem);
-      } else {
-        console.warn('Stock insuficiente para el producto:', product.name);
-        return false;
-      }
-    }
-
-    console.log('🛒 [DataService] Carrito después de agregar:', currentCart);
-    this.saveCart(currentCart);
-    console.log('🛒 [DataService] Carrito guardado, nuevo carrito:', this.cart());
-    return true;
+  public isProductInCart(productId: string): boolean {
+    return this.cart().some(item => item.id === productId);
   }
 
   /**
-   * Actualiza la cantidad de un producto en el carrito
+   * Obtiene la cantidad de un producto en el carrito (usa estado local)
    */
-  public updateCartItemQuantity(productId: string, quantity: number): boolean {
-    if (quantity < 0) return false;
-
-    const currentCart = [...this.cart()];
-    const itemIndex = currentCart.findIndex(item => item.id === productId);
-
-    if (itemIndex >= 0) {
-      if (quantity === 0) {
-        // Eliminar el producto si la cantidad es 0
-        currentCart.splice(itemIndex, 1);
-      } else if (quantity <= currentCart[itemIndex].maxStock) {
-        // Actualizar la cantidad
-        currentCart[itemIndex].quantity = quantity;
-      } else {
-        console.warn('Stock insuficiente');
-        return false;
-      }
-
-      this.saveCart(currentCart);
-      return true;
-    }
-
-    return false;
-  }
-
-  /**
-   * Elimina un producto del carrito
-   */
-  public removeFromCart(productId: string): boolean {
-    const currentCart = [...this.cart()];
-    const itemIndex = currentCart.findIndex(item => item.id === productId);
-
-    if (itemIndex >= 0) {
-      currentCart.splice(itemIndex, 1);
-      this.saveCart(currentCart);
-      return true;
-    }
-
-    return false;
-  }
-
-  /**
-   * Limpia completamente el carrito
-   */
-  public clearCart(): void {
-    this.saveCart([]);
+  public getProductQuantityInCart(productId: string): number {
+    const item = this.cart().find(item => item.id === productId);
+    return item ? item.quantity : 0;
   }
 
   /**
@@ -762,7 +633,7 @@ export class DataService {
     let totalDiscount = 0;
     let totalItems = 0;
 
-    cartItems.forEach(item => {
+    cartItems.forEach((item: CartItem) => {
       const itemTotal = item.price * item.quantity;
       subtotal += itemTotal;
       totalItems += item.quantity;
@@ -781,173 +652,256 @@ export class DataService {
     };
   }
 
-  /**
-   * Verifica si un producto está en el carrito
-   */
-  public isProductInCart(productId: string): boolean {
-    return this.cart().some(item => item.id === productId);
-  }
-
-  /**
-   * Obtiene la cantidad de un producto específico en el carrito
-   */
-  public getProductQuantityInCart(productId: string): number {
-    const item = this.cart().find(item => item.id === productId);
-    return item ? item.quantity : 0;
-  }
-
   // ===================================
-  // PRODUCT CRUD METHODS
+  // UTILITY METHODS
   // ===================================
 
   /**
-   * Crea un nuevo producto
+   * Muestra estadísticas de los datos cargados
    */
-  public createProduct(productData: Omit<Product, 'id'>): Product {
-    const newProduct: Product = {
-      ...productData,
-      id: 'product_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9)
-    };
-
-    const currentProducts = this.products();
-    const updatedProducts = [...currentProducts, newProduct];
+  public displayStats(): void {
+    const users = this.users();
+    const products = this.products();
+    const orders = this.orders();
+    const cart = this.cart();
     
-    this.saveProducts(updatedProducts);
-    console.log('✅ Producto creado:', newProduct.name);
-    
-    return newProduct;
+    console.log('\n📊 ESTADÍSTICAS DE DATOS:');
+    console.log('👥 Usuarios:', users.length);
+    console.log('📦 Productos:', products.length);
+    console.log('🛒 Órdenes:', orders.length);
+    console.log('🛍️ Items en carrito:', cart.length);
+    console.log('\n🔐 CUENTAS DE PRUEBA:');
+    console.log('Admin: admin@shikenshop.com / Admin123');
+    console.log('Comprador: comprador@test.com / Comprador123');
+    console.log('Comprador 2: maria.gomez@test.com / Maria123\n');
   }
 
+  // ===================================
+  // ADMIN PRODUCT METHODS (API)
+  // ===================================
+
   /**
-   * Actualiza un producto existente
+   * Crea un nuevo producto vía API
    */
-  public updateProduct(productId: string, updatedData: Partial<Product>): Product | null {
-    const currentProducts = this.products();
-    const productIndex = currentProducts.findIndex(p => p.id === productId);
+  public async createProduct(productData: Omit<Product, 'id'>): Promise<Product | null> {
+    console.log('📦 [API] createProduct:', productData);
     
-    if (productIndex === -1) {
-      console.error('❌ Producto no encontrado:', productId);
+    try {
+      const response = await firstValueFrom(
+        this.http.post<ApiResponse<Product>>(
+          `${this.apiUrl}/products`,
+          productData
+        )
+      );
+      
+      if (response.success && response.data) {
+        // Actualizar lista local
+        await this.loadProductsFromApi();
+        console.log('✅ Producto creado:', response.data.name);
+        return response.data;
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('❌ Error creando producto:', error);
       return null;
     }
-
-    const updatedProduct: Product = {
-      ...currentProducts[productIndex],
-      ...updatedData,
-      id: productId // Ensure ID doesn't change
-    };
-
-    const updatedProducts = [...currentProducts];
-    updatedProducts[productIndex] = updatedProduct;
-    
-    this.saveProducts(updatedProducts);
-    console.log('✅ Producto actualizado:', updatedProduct.name);
-    
-    return updatedProduct;
   }
 
   /**
-   * Elimina un producto
+   * Actualiza un producto vía API
    */
-  public deleteProduct(productId: string): boolean {
-    const currentProducts = this.products();
-    const filteredProducts = currentProducts.filter(p => p.id !== productId);
+  public async updateProduct(productId: string, updatedData: Partial<Product>): Promise<Product | null> {
+    console.log('📦 [API] updateProduct:', { productId, updatedData });
     
-    if (filteredProducts.length === currentProducts.length) {
-      console.error('❌ Producto no encontrado para eliminar:', productId);
+    try {
+      const response = await firstValueFrom(
+        this.http.put<ApiResponse<Product>>(
+          `${this.apiUrl}/products/${productId}`,
+          updatedData
+        )
+      );
+      
+      if (response.success && response.data) {
+        // Actualizar lista local
+        await this.loadProductsFromApi();
+        console.log('✅ Producto actualizado:', response.data.name);
+        return response.data;
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('❌ Error actualizando producto:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Elimina un producto vía API
+   */
+  public async deleteProduct(productId: string): Promise<boolean> {
+    console.log('📦 [API] deleteProduct:', productId);
+    
+    try {
+      const response = await firstValueFrom(
+        this.http.delete<ApiResponse<void>>(
+          `${this.apiUrl}/products/${productId}`
+        )
+      );
+      
+      if (response.success) {
+        // Actualizar lista local
+        await this.loadProductsFromApi();
+        console.log('✅ Producto eliminado');
+        return true;
+      }
+      
+      return false;
+    } catch (error) {
+      console.error('❌ Error eliminando producto:', error);
       return false;
     }
-
-    this.saveProducts(filteredProducts);
-    console.log('✅ Producto eliminado:', productId);
-    
-    return true;
   }
 
   // ===================================
-  // USER MANAGEMENT METHODS
+  // ADMIN ORDER METHODS (API)
   // ===================================
 
   /**
-   * Actualiza el rol de un usuario
+   * Actualiza el estado de una orden vía API
    */
-  public updateUserRole(userEmail: string, newRole: UserRole): boolean {
-    const currentUsers = this.users();
-    const userIndex = currentUsers.findIndex(u => u.email === userEmail);
+  public async updateOrderStatus(orderNumber: string, newStatus: string): Promise<boolean> {
+    console.log('📦 [API] updateOrderStatus:', { orderNumber, newStatus });
     
-    if (userIndex === -1) {
-      console.error('❌ Usuario no encontrado:', userEmail);
+    try {
+      const response = await firstValueFrom(
+        this.http.put<ApiResponse<Order>>(
+          `${this.apiUrl}/orders/${orderNumber}/status`,
+          { status: newStatus }
+        )
+      );
+      
+      if (response.success && response.data) {
+        // Actualizar lista local de órdenes
+        const currentOrders = this.orders();
+        const updatedOrders = currentOrders.map(o => 
+          o.orderNumber === orderNumber ? response.data! : o
+        );
+        this.ordersSignal.set(updatedOrders);
+        this.ordersSubject.next(updatedOrders);
+        console.log('✅ Estado de orden actualizado');
+        return true;
+      }
+      
+      return false;
+    } catch (error) {
+      console.error('❌ Error actualizando estado de orden:', error);
       return false;
     }
-
-    const updatedUsers = [...currentUsers];
-    updatedUsers[userIndex] = {
-      ...updatedUsers[userIndex],
-      role: newRole
-    };
-
-    this.saveUsers(updatedUsers);
-    console.log('✅ Rol de usuario actualizado:', userEmail, 'nuevo rol:', newRole);
-    
-    return true;
   }
 
   // ===================================
-  // ORDER MANAGEMENT METHODS
+  // ADMIN USER METHODS (API)
   // ===================================
 
   /**
-   * Actualiza el estado de una orden
+   * Carga usuarios desde el backend (solo admin)
    */
-  public updateOrderStatus(orderNumber: string, newStatus: any): boolean {
-    const currentOrders = this.orders();
-    const orderIndex = currentOrders.findIndex(o => o.orderNumber === orderNumber);
+  public async loadUsers(): Promise<void> {
+    try {
+      const response = await firstValueFrom(
+        this.http.get<ApiResponse<User[]>>(`${this.apiUrl}/users`)
+      );
+      
+      if (response.success && response.data) {
+        this.usersSignal.set(response.data);
+        this.usersSubject.next(response.data);
+        console.log(`✅ ${response.data.length} usuarios cargados desde API`);
+      }
+    } catch (error) {
+      console.error('❌ Error cargando usuarios desde API:', error);
+    }
+  }
+
+  /**
+   * Actualiza el rol de un usuario vía API
+   */
+  public async updateUserRole(userEmail: string, newRole: UserRole): Promise<boolean> {
+    console.log('👤 [API] updateUserRole:', { userEmail, newRole });
     
-    if (orderIndex === -1) {
-      console.error('❌ Orden no encontrada:', orderNumber);
+    try {
+      const response = await firstValueFrom(
+        this.http.put<ApiResponse<User>>(
+          `${this.apiUrl}/users/${userEmail}/role`,
+          { role: newRole }
+        )
+      );
+      
+      if (response.success && response.data) {
+        // Actualizar lista local
+        await this.loadUsers();
+        console.log('✅ Rol de usuario actualizado');
+        return true;
+      }
+      
+      return false;
+    } catch (error) {
+      console.error('❌ Error actualizando rol de usuario:', error);
       return false;
     }
-
-    const updatedOrders = [...currentOrders];
-    updatedOrders[orderIndex] = {
-      ...updatedOrders[orderIndex],
-      status: newStatus,
-      updatedAt: new Date().toISOString()
-    };
-
-    this.saveOrders(updatedOrders);
-    console.log('✅ Estado de orden actualizado:', orderNumber, 'nuevo estado:', newStatus);
-    
-    return true;
   }
 
   /**
-   * Crea una nueva orden
+   * Actualiza el perfil de un usuario vía API
    */
-  public createOrder(orderData: Omit<Order, 'orderNumber' | 'createdAt' | 'updatedAt'>): Order {
-    const newOrder: Order = {
-      ...orderData,
-      orderNumber: this.generateOrderNumber(),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
-
-    const currentOrders = this.orders();
-    const updatedOrders = [...currentOrders, newOrder];
+  public async updateUserProfile(userEmail: string, profileData: Partial<User>): Promise<User | null> {
+    console.log('👤 [API] updateUserProfile:', { userEmail, profileData });
     
-    this.saveOrders(updatedOrders);
-    console.log('✅ Orden creada:', newOrder.orderNumber);
-    
-    return newOrder;
+    try {
+      const response = await firstValueFrom(
+        this.http.put<ApiResponse<User>>(
+          `${this.apiUrl}/users/${userEmail}`,
+          profileData
+        )
+      );
+      
+      if (response.success && response.data) {
+        // Actualizar lista local
+        const currentUsers = this.users();
+        const updatedUsers = currentUsers.map(u => 
+          u.email === userEmail ? response.data! : u
+        );
+        this.usersSignal.set(updatedUsers);
+        this.usersSubject.next(updatedUsers);
+        console.log('✅ Perfil de usuario actualizado');
+        return response.data;
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('❌ Error actualizando perfil de usuario:', error);
+      return null;
+    }
   }
 
   /**
-   * Genera un número único para la orden
+   * Cambia la contraseña de un usuario vía API
    */
-  private generateOrderNumber(): string {
-    const timestamp = Date.now();
-    const random = Math.random().toString(36).substring(2, 9).toUpperCase();
-    return `ORD-${timestamp}-${random}`;
+  public async changeUserPassword(userEmail: string, currentPassword: string, newPassword: string): Promise<boolean> {
+    console.log('👤 [API] changeUserPassword:', { userEmail });
+    
+    try {
+      const response = await firstValueFrom(
+        this.http.put<ApiResponse<void>>(
+          `${this.apiUrl}/users/${userEmail}/password`,
+          { currentPassword, newPassword }
+        )
+      );
+      
+      return response.success;
+    } catch (error) {
+      console.error('❌ Error cambiando contraseña:', error);
+      return false;
+    }
   }
-
-
 }

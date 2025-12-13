@@ -244,7 +244,7 @@ export class AdminProductsComponent implements OnInit {
     console.log('✏️ Formulario poblado con valores:', this.productForm.value);
   }
 
-  deleteProduct(product: Product): void {
+  async deleteProduct(product: Product): Promise<void> {
     console.log('🗑️ Intentando eliminar producto:', product);
     
     if (!confirm(`¿Estás seguro de que deseas eliminar "${product.name}"?`)) {
@@ -254,7 +254,7 @@ export class AdminProductsComponent implements OnInit {
     this.isLoading.set(true);
 
     try {
-      const result = this.dataService.deleteProduct(product.id);
+      const result = await this.dataService.deleteProduct(product.id);
       console.log('🗑️ Resultado eliminación:', result);
       
       if (result) {
@@ -270,7 +270,7 @@ export class AdminProductsComponent implements OnInit {
     }
   }
 
-  toggleProductStatus(product: Product): void {
+  async toggleProductStatus(product: Product): Promise<void> {
     this.isLoading.set(true);
 
     try {
@@ -279,7 +279,7 @@ export class AdminProductsComponent implements OnInit {
         active: !product.active
       };
 
-      this.dataService.updateProduct(product.id, updatedProduct);
+      await this.dataService.updateProduct(product.id, updatedProduct);
       
       const status = updatedProduct.active ? 'activado' : 'desactivado';
       this.notificationService.success(`Producto ${status} correctamente`);
@@ -291,7 +291,7 @@ export class AdminProductsComponent implements OnInit {
     }
   }
 
-  onSaveProduct(): void {
+  async onSaveProduct(): Promise<void> {
     if (this.productForm.invalid) {
       this.markFormGroupTouched(this.productForm);
       this.notificationService.warning('Por favor completa todos los campos requeridos');
@@ -319,7 +319,7 @@ export class AdminProductsComponent implements OnInit {
         // Update existing product
         const product = this.editingProduct()!;
         const updatedProduct = { ...product, ...productData };
-        this.dataService.updateProduct(product.id, updatedProduct);
+        await this.dataService.updateProduct(product.id, updatedProduct);
         this.notificationService.success('Producto actualizado correctamente');
         console.log('✅ Producto actualizado:', updatedProduct);
       } else {
@@ -344,7 +344,7 @@ export class AdminProductsComponent implements OnInit {
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString()
         };
-        this.dataService.createProduct(newProduct);
+        await this.dataService.createProduct(newProduct);
         this.notificationService.success('Producto creado correctamente');
         console.log('✅ Producto creado:', newProduct);
       }

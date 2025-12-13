@@ -8,7 +8,6 @@ import { DataService } from './services/data.service';
 // Declaración global para TypeScript
 declare global {
   interface Window {
-    resetShikenData: () => Promise<void>;
     shikenDataService: DataService;
   }
 }
@@ -26,17 +25,11 @@ export class App {
   constructor() {
     // Exponer métodos útiles en la consola para desarrollo
     if (typeof window !== 'undefined') {
-      window.resetShikenData = async () => {
-        console.log('🔄 Reseteando datos de ShikenShop...');
-        await this.dataService.resetAllData();
-        console.log('✅ Datos reseteados. Recargando página...');
-        window.location.reload();
-      };
       window.shikenDataService = this.dataService;
 
       console.log('🎮 ShikenShop Debug Tools:');
-      console.log('  - resetShikenData(): Resetea todos los datos y recarga la página');
       console.log('  - shikenDataService: Acceso directo al servicio de datos');
+      console.log('  - Los datos ahora se gestionan desde el backend API');
     }
   }
 }

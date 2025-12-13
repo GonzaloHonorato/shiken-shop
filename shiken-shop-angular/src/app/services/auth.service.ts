@@ -1,8 +1,11 @@
 import { Injectable, signal, computed, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { BehaviorSubject, Observable, fromEvent, merge } from 'rxjs';
+import { BehaviorSubject, Observable, fromEvent, merge, firstValueFrom } from 'rxjs';
 import { User, LoginCredentials, AuthState, UserRole, RegisterData, StorageKeys } from '../models';
 import { NotificationService } from './notification.service';
+import { DataService } from './data.service';
+import { environment } from '../../environments/environment';
 
 // ===================================
 // AUTH CONFIGURATION
@@ -188,12 +191,26 @@ export interface SessionData {
  * }
  * ```
  */
+// ===================================
+// API RESPONSE INTERFACE
+// ===================================
+interface AuthResponse {
+  success: boolean;
+  message?: string;
+  user?: Omit<User, 'password'>;
+  token?: string;
+  error?: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
+  private http = inject(HttpClient);
   private router = inject(Router);
   private notificationService = inject(NotificationService);
+  private dataService = inject(DataService);
+  private apiUrl = environment.apiUrl;
   private config: AuthConfig = DEFAULT_AUTH_CONFIG;
   
   // ===================================
@@ -320,34 +337,49 @@ export class AuthService {
         };
       }
       
-      // Obtener usuarios del localStorage
-      const users = this.getUsersFromStorage();
-      
-      // Buscar usuario
-      const user = users.find(u => 
-        (u.email === credentials.email || u.name === credentials.email) && 
-        u.password === credentials.password && 
-        u.active
+      // Llamar al backend API
+      const response = await firstValueFrom(
+        this.http.post<AuthResponse>(`${this.apiUrl}/auth/login`, {
+          ...credentials,
+          rememberMe
+        })
       );
       
-      if (!user) {
+      if (!response.success || !response.user || !response.token) {
         this.handleFailedLogin();
         const remainingAttempts = this.getRemainingAttempts();
         return {
           success: false,
-          message: remainingAttempts > 0 
+          message: response.message || (remainingAttempts > 0 
             ? `Credenciales incorrectas. Te quedan ${remainingAttempts} intentos.`
-            : 'Cuenta bloqueada por 15 minutos debido a múltiples intentos fallidos.'
+            : 'Cuenta bloqueada por 15 minutos debido a múltiples intentos fallidos.')
         };
       }
       
-      // Login exitoso
-      this.createSession(user, rememberMe);
+      // Login exitoso - crear sesión con datos del backend
+      const sessionData: SessionData = {
+        isLoggedIn: true,
+        userId: 0, // El backend no devuelve ID numérico, usar 0
+        username: response.user.email,
+        email: response.user.email,
+        name: response.user.name,
+        fullName: response.user.fullName || response.user.name,
+        role: response.user.role as UserRole,
+        token: response.token,
+        loginTime: Date.now(),
+        rememberMe
+      };
+      
+      this.setSession(sessionData);
       this.clearLoginAttempts();
+      
+      // Migrar carrito local al backend
+      await this.dataService.migrateLocalCartToBackend(response.user.email);
+      await this.dataService.loadUserOrders(response.user.email);
       
       return {
         success: true,
-        message: `¡Bienvenido, ${user.name}!`
+        message: response.message || `¡Bienvenido, ${response.user.name}!`
       };
       
     } catch (error) {
@@ -432,59 +464,40 @@ export class AuthService {
    */
   async register(registerData: RegisterData): Promise<{ success: boolean; message: string }> {
     try {
-      console.log('🔧 [AUTH-SERVICE] Iniciando proceso de registro...', {
-        name: registerData.name,
-        email: registerData.email,
-        hasPassword: !!registerData.password,
-        hasConfirmPassword: !!registerData.confirmPassword
-      });
+      console.log('🔧 [AUTH-SERVICE] Iniciando proceso de registro en API...');
 
-      // Validar que las contraseñas coincidan
-      if (registerData.password !== registerData.confirmPassword) {
-        console.log('❌ [AUTH-SERVICE] Las contraseñas no coinciden');
+      // Llamar al backend API
+      const response = await firstValueFrom(
+        this.http.post<AuthResponse>(`${this.apiUrl}/auth/register`, registerData)
+      );
+      
+      if (!response.success) {
+        console.log('❌ [AUTH-SERVICE] Registro fallido:', response.message);
         return {
           success: false,
-          message: 'Las contraseñas no coinciden.'
+          message: response.message || response.error || 'Error en el registro'
         };
       }
       
-      // Obtener usuarios existentes
-      const users = this.getUsersFromStorage();
-      console.log('📊 [AUTH-SERVICE] Usuarios existentes en storage:', users.length);
+      console.log('✅ [AUTH-SERVICE] Usuario registrado exitosamente en API');
       
-      // Verificar si el email ya existe
-      const existingUser = users.find(u => u.email === registerData.email);
-      if (existingUser) {
-        console.log('⚠️ [AUTH-SERVICE] Email ya existe:', registerData.email);
-        return {
-          success: false,
-          message: 'Ya existe una cuenta con este email.'
+      // Si el registro incluye auto-login (tiene token)
+      if (response.user && response.token) {
+        const sessionData: SessionData = {
+          isLoggedIn: true,
+          userId: 0,
+          username: response.user.email,
+          email: response.user.email,
+          name: response.user.name,
+          fullName: response.user.fullName || response.user.name,
+          role: response.user.role as UserRole,
+          token: response.token,
+          loginTime: Date.now(),
+          rememberMe: false
         };
+        
+        this.setSession(sessionData);
       }
-      
-      // Crear nuevo usuario
-      const newUser: User = {
-        name: registerData.name,
-        email: registerData.email,
-        password: registerData.password, // En producción debería estar hasheada
-        role: UserRole.BUYER, // Por defecto es buyer
-        active: true,
-        registeredAt: new Date().toISOString()
-      };
-      
-      console.log('👤 [AUTH-SERVICE] Creando nuevo usuario:', {
-        name: newUser.name,
-        email: newUser.email,
-        role: newUser.role,
-        active: newUser.active
-      });
-      
-      // Agregar usuario a la lista
-      users.push(newUser);
-      localStorage.setItem(StorageKeys.USERS, JSON.stringify(users));
-      
-      console.log('💾 [AUTH-SERVICE] Usuario guardado en localStorage');
-      console.log('📈 [AUTH-SERVICE] Total de usuarios después del registro:', users.length);
       
       // Verificar que se guardó correctamente
       const savedUsers = this.getUsersFromStorage();
@@ -575,6 +588,12 @@ export class AuthService {
       rememberMe
     };
     
+    localStorage.setItem(StorageKeys.SESSION, JSON.stringify(sessionData));
+    this.updateAuthState(sessionData);
+    this.setupInactivityTimer();
+  }
+
+  private setSession(sessionData: SessionData): void {
     localStorage.setItem(StorageKeys.SESSION, JSON.stringify(sessionData));
     this.updateAuthState(sessionData);
     this.setupInactivityTimer();

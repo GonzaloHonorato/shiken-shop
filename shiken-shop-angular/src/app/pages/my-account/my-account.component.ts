@@ -155,54 +155,27 @@ export class MyAccountComponent implements OnInit {
     this.isLoadingProfile.set(true);
 
     try {
-      // Simular delay de API
-      await this.delay(1000);
-
       const formData = this.profileForm.value;
       const user = this.currentUser();
       
       if (!user) return;
 
-      // Actualizar datos del usuario
-      const users = this.dataService.users();
-      const userIndex = users.findIndex(u => u.email === user.email);
-      
-      if (userIndex === -1) {
-        throw new Error('Usuario no encontrado');
-      }
-
-      // Verificar si el email o username ya existe (excepto el usuario actual)
-      const emailExists = users.some(u => u.email !== user.email && u.email === formData.email);
-      const usernameExists = users.some(u => u.email !== user.email && u.username === formData.username);
-
-      if (emailExists) {
-        this.notificationService.error('El correo electrónico ya está en uso');
-        return;
-      }
-
-      if (usernameExists) {
-        this.notificationService.error('El nombre de usuario ya está en uso');
-        return;
-      }
-
-      // Actualizar usuario
-      const updatedUser = {
-        ...users[userIndex],
+      // Actualizar perfil vía API
+      const updatedUser = await this.dataService.updateUserProfile(user.email, {
         ...formData,
         updatedAt: new Date().toISOString()
-      };
+      });
 
-      users[userIndex] = updatedUser;
-      this.dataService.saveUsers(users);
+      if (!updatedUser) {
+        this.notificationService.error('Error al actualizar el perfil');
+        return;
+      }
 
       // Actualizar sesión si cambió el email
       if (formData.email !== user.email) {
-        // Actualizar sesión mediante logout/login si el email cambió
-        if (formData.email !== user.email) {
-          this.authService.logout();
-          this.router.navigate(['/login']);
-          return;
-        }
+        this.authService.logout();
+        this.router.navigate(['/login']);
+        return;
       }
 
       // Actualizar datos originales
@@ -258,38 +231,19 @@ export class MyAccountComponent implements OnInit {
     this.isLoadingPassword.set(true);
 
     try {
-      // Simular delay de API
-      await this.delay(1000);
-
       const { currentPassword, newPassword } = this.passwordForm.value;
       const user = this.currentUser();
       
       if (!user) return;
 
-      // Verificar contraseña actual
-      const users = this.dataService.users();
-      const currentUser = users.find(u => u.email === user.email);
+      // Cambiar contraseña vía API
+      const success = await this.dataService.changeUserPassword(user.email, currentPassword, newPassword);
       
-      if (!currentUser) {
-        throw new Error('Usuario no encontrado');
-      }
-
-      // Verificar contraseña actual (en un sistema real se usaría hashing)
-      if (currentUser.password !== currentPassword) {
+      if (!success) {
         this.passwordForm.get('currentPassword')?.setErrors({ incorrect: true });
         this.notificationService.error('La contraseña actual es incorrecta');
         return;
       }
-
-      // Actualizar contraseña
-      const userIndex = users.findIndex(u => u.email === user.email);
-      users[userIndex] = {
-        ...users[userIndex],
-        password: newPassword,
-        updatedAt: new Date().toISOString()
-      };
-
-      this.dataService.saveUsers(users);
 
       // Limpiar formulario
       this.passwordForm.reset();

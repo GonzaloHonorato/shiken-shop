@@ -78,14 +78,22 @@ export class CartComponent implements OnInit {
   /**
    * Incrementa la cantidad de un producto en el carrito
    */
-  increaseQuantity(index: number): void {
+  async increaseQuantity(index: number): Promise<void> {
     const cart = [...this.cart()];
     const item = cart[index];
+    const user = this.currentUser();
+    
+    if (!user) {
+      this.notificationService.warning('Debes iniciar sesión');
+      return;
+    }
     
     if (item && item.quantity < item.maxStock) {
-      item.quantity++;
-      this.dataService.saveCart(cart);
-      this.notificationService.success(`Cantidad actualizada: ${item.name}`);
+      const newQuantity = item.quantity + 1;
+      const success = await this.dataService.updateCartItemHTTP(user.email, item.id, newQuantity);
+      if (success) {
+        this.notificationService.success(`Cantidad actualizada: ${item.name}`);
+      }
     } else {
       this.notificationService.warning('Stock máximo alcanzado');
     }
@@ -94,14 +102,22 @@ export class CartComponent implements OnInit {
   /**
    * Decrementa la cantidad de un producto en el carrito
    */
-  decreaseQuantity(index: number): void {
+  async decreaseQuantity(index: number): Promise<void> {
     const cart = [...this.cart()];
     const item = cart[index];
+    const user = this.currentUser();
+    
+    if (!user) {
+      this.notificationService.warning('Debes iniciar sesión');
+      return;
+    }
     
     if (item && item.quantity > 1) {
-      item.quantity--;
-      this.dataService.saveCart(cart);
-      this.notificationService.success(`Cantidad actualizada: ${item.name}`);
+      const newQuantity = item.quantity - 1;
+      const success = await this.dataService.updateCartItemHTTP(user.email, item.id, newQuantity);
+      if (success) {
+        this.notificationService.success(`Cantidad actualizada: ${item.name}`);
+      }
     } else {
       this.removeFromCart(index);
     }
@@ -110,29 +126,44 @@ export class CartComponent implements OnInit {
   /**
    * Elimina un producto del carrito
    */
-  removeFromCart(index: number): void {
+  async removeFromCart(index: number): Promise<void> {
     const cart = [...this.cart()];
     const item = cart[index];
+    const user = this.currentUser();
+    
+    if (!user) {
+      this.notificationService.warning('Debes iniciar sesión');
+      return;
+    }
     
     if (item) {
-      cart.splice(index, 1);
-      this.dataService.saveCart(cart);
-      this.notificationService.success(`${item.name} eliminado del carrito`);
+      const success = await this.dataService.removeFromCartHTTP(user.email, item.id);
+      if (success) {
+        this.notificationService.success(`${item.name} eliminado del carrito`);
+      }
     }
   }
 
   /**
    * Vacía completamente el carrito
    */
-  clearCart(): void {
+  async clearCart(): Promise<void> {
     if (this.isEmpty()) {
       this.notificationService.info('El carrito ya está vacío');
       return;
     }
 
+    const user = this.currentUser();
+    if (!user) {
+      this.notificationService.warning('Debes iniciar sesión');
+      return;
+    }
+
     if (confirm('¿Estás seguro de que deseas vaciar el carrito?')) {
-      this.dataService.saveCart([]);
-      this.notificationService.success('Carrito vaciado correctamente');
+      const success = await this.dataService.clearCartHTTP(user.email);
+      if (success) {
+        this.notificationService.success('Carrito vaciado correctamente');
+      }
     }
   }
 
@@ -168,7 +199,7 @@ export class CartComponent implements OnInit {
   /**
    * Completa la orden y guarda en el historial
    */
-  private completeOrder(): void {
+  private async completeOrder(): Promise<void> {
     const cart = this.cart();
     const user = this.currentUser();
     const summary = this.cartSummary();
@@ -178,24 +209,35 @@ export class CartComponent implements OnInit {
       return;
     }
 
-    // Crear la orden usando el método del servicio
-    const order = this.dataService.createOrder({
-      items: cart,
-      total: summary.total,
-      date: new Date().toISOString(),
-      status: OrderStatus.DELIVERED,
-      user: user
-    });
+    try {
+      // Crear la orden usando el método HTTP del servicio
+      const order = await this.dataService.createOrderHTTP({
+        userId: user.email,
+        items: cart,
+        shippingAddress: {},
+        paymentMethod: 'card',
+        subtotal: summary.subtotal,
+        discount: summary.totalDiscount,
+        total: summary.total
+      });
 
-    // Limpiar el carrito
-    this.dataService.saveCart([]);
+      if (order) {
+        // Limpiar el carrito vía API
+        await this.dataService.clearCartHTTP(user.email);
 
-    // Mostrar modal de éxito
-    this.orderNumber.set(order.orderNumber);
-    this.showCheckoutModal.set(true);
-    this.isProcessingCheckout.set(false);
-
-    this.notificationService.success('¡Compra realizada con éxito!');
+        // Mostrar modal de éxito
+        this.orderNumber.set(order.orderNumber);
+        this.showCheckoutModal.set(true);
+        this.notificationService.success('¡Compra realizada con éxito!');
+      } else {
+        this.notificationService.error('Error al crear la orden');
+      }
+    } catch (error) {
+      console.error('Error creando orden:', error);
+      this.notificationService.error('Error al procesar la compra');
+    } finally {
+      this.isProcessingCheckout.set(false);
+    }
   }
 
 
